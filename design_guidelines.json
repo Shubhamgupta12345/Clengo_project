@@ -1,0 +1,127 @@
+{
+  "theme": "light",
+  "typography": {
+    "font_families": {
+      "headings": "Outfit, sans-serif",
+      "body": "Manrope, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "scale": {
+      "h1": "text-5xl md:text-6xl tracking-tight font-bold",
+      "h2": "text-4xl tracking-tight font-semibold",
+      "h3": "text-2xl font-medium",
+      "body_large": "text-lg leading-relaxed",
+      "body_default": "text-base leading-relaxed",
+      "labels": "text-xs tracking-[0.2em] uppercase font-bold"
+    },
+    "rules": [
+      "NEVER use Inter, Roboto, or Open Sans.",
+      "Headings over 32px MUST use tracking-tight.",
+      "Use Outfit for a modern, punchy D2C feel and Manrope for clean, friendly body text."
+    ]
+  },
+  "colors": {
+    "brand": {
+      "primary": "#D4A017",
+      "primary_hover": "#B88A14",
+      "primary_light": "#FDF6E3"
+    },
+    "base": {
+      "background_consumer": "#FDFDFB",
+      "background_admin": "#F4F5F7",
+      "surface_white": "#FFFFFF",
+      "surface_off_white": "#F7F6F2"
+    },
+    "text": {
+      "heading": "#111111",
+      "body": "#4A4A4A",
+      "muted": "#767676",
+      "inverse": "#FFFFFF"
+    },
+    "states": {
+      "success": "#2E7D32",
+      "error": "#D32F2F",
+      "warning": "#ED6C02"
+    },
+    "rules": [
+      "Use #FDFDFB instead of pure white for consumer app background to give a warm, organic 'fresh linen' feel.",
+      "Pure white is reserved for high-elevation cards and the admin dashboard panels.",
+      "Avoid using dark colors as gradients. Keep the golden yellow (#D4A017) solid or subtly shaded."
+    ]
+  },
+  "spacing_and_layout": {
+    "consumer_app": {
+      "philosophy": "Generous Spacing, Organic Shapes",
+      "padding": "Use p-8 to p-12 for sections. Cards should have p-6.",
+      "border_radius": "rounded-2xl or rounded-3xl for a friendly, approachable aesthetic."
+    },
+    "admin_dashboard": {
+      "philosophy": "High Density, Functional Clarity",
+      "padding": "Use tight gaps (gap-4) and crisp paddings (p-4 or p-6).",
+      "border_radius": "rounded-lg for a utilitarian, professional look."
+    },
+    "grids": "Follow the 'Bento Grid Protocol'. Never fill 100% of the screen perfectly on consumer pages; leave breathing room."
+  },
+  "visual_enhancers": {
+    "shadows": {
+      "ambient": "shadow-[0_8px_30px_rgb(0,0,0,0.04)]",
+      "hover_lift": "shadow-[0_20px_40px_rgb(0,0,0,0.08)]"
+    },
+    "glassmorphism": "Use for the sticky top navigation bar: backdrop-blur-xl bg-white/80 border-b border-black/5.",
+    "borders": "1px solid border-black/5 on cards to crisp up the edges instead of relying only on shadows."
+  },
+  "components": {
+    "hero_section": "Asymmetrical layout. Large 'Outfit' typography on the left. The Pincode checker should be prominent—a large input field rounded-full with a pill-shaped golden button. Right side features an immersive image with floating 'rating' or 'bubble' tags.",
+    "service_cards": "Wash, Iron, Dry Clean. Don't just use standard Shadcn cards. Use soft beige/off-white background (#F7F6F2) with hover '-translate-y-1' and a subtle golden border on hover.",
+    "pincode_input": "Pill-shaped, large padding, clear placeholder. Icon on the left (MapPin).",
+    "order_timeline": "Vertical stepper. Use the golden yellow for active states, muted gray for pending. Keep lines thin (2px).",
+    "admin_tables": "Use Shadcn Table. Strict alignment. Header text should be text-xs tracking-[0.1em] uppercase text-muted. Add 'Mark Complete' button as a compact, pill-shaped outline button that turns solid gold on hover.",
+    "dropdowns_and_modals": "Never use fully transparent backgrounds. Must use solid white or glassmorphism to avoid text collision."
+  },
+  "motion": {
+    "hover": "transition-all duration-300 ease-out",
+    "micro_interactions": "Buttons scale down slightly active:scale-95. Cards lift on hover -translate-y-1.",
+    "page_transitions": "Staggered fade-up for lists (My Orders, Service Cards)."
+  },
+  "image_urls": {
+    "hero_background": {
+      "url": "https://images.unsplash.com/photo-1709477542164-ae852db0d019?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODh8MHwxfHNlYXJjaHwyfHxoYXBweSUyMHBlcnNvbiUyMGRvaW5nJTIwbGF1bmRyeXxlbnwwfHx8fDE3ODI3MjczNzd8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Happy woman with laundry basket, bright clean lighting. Perfect for hero right side image.",
+      "category": "Hero Section"
+    },
+    "wash_service": {
+      "url": "https://images.unsplash.com/photo-1567857171318-944337972f90?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NjZ8MHwxfHNlYXJjaHwxfHx3YXNoaW5nJTIwbWFjaGluZSUyMHdhdGVyJTIwYnViYmxlcyUyMGNsZWFufGVufDB8fHx8MTc4MzE2MTA4Mnww&ixlib=rb-4.1.0&q=85",
+      "description": "Clean, crisp water bubbles",
+      "category": "Service Card - Wash"
+    },
+    "iron_service": {
+      "url": "https://images.unsplash.com/photo-1633680889715-2c9752bf0840",
+      "description": "Close up of an iron on blue cloth",
+      "category": "Service Card - Iron"
+    },
+    "dry_clean_service": {
+      "url": "https://images.unsplash.com/photo-1699797467199-6bdf301649e8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NDh8MHwxfHNlYXJjaHwyfHxjbGVhbiUyMGZvbGRlZCUyMGNsb3RoZXMlMjBzdW5saWdodHxlbnwwfHx8fDE3ODM3NzczNDl8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Crisp folded linen/towels in warm sunlight",
+      "category": "Service Card - Dry Clean"
+    }
+  },
+  "instructions_to_main_agent": [
+    "You tend to converge toward generic, 'on distribution' outputs. Avoid this: make creative, distinctive frontends that surprise and delight.",
+    "Do not use dark colors as gradients.",
+    "Don't make generic centered layouts. Use asymmetrical grids.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur) for sticky headers. DO NOT use complete transparent backgrounds.",
+    "NEVER apply universal transitions (e.g., transition: all). Target specific properties.",
+    "DO NOT center align the app container (.App { text-align: center; }). Keep text naturally aligned left.",
+    "Use modern pill-shaped or squircle buttons with active animations.",
+    "NEVER use AI assistant Emoji characters for icons. Use lucide-react.",
+    "Every interaction needs micro-animations - hover states, transitions.",
+    "Use generous spacing (p-8 to p-12). Cramped designs look cheap.",
+    "ALL interactive and key informational elements MUST include a data-testid attribute in kebab-case."
+  ],
+  "accessibility": {
+    "focus_states": "focus:ring-2 focus:ring-[#D4A017] focus:outline-none focus:ring-offset-2",
+    "contrast": "Ensure text over golden primary buttons is #111111 (Black) for optimal contrast, not white.",
+    "motion": "Respect prefers-reduced-motion for all animations."
+  }
+}
