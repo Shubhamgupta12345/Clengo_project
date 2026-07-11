@@ -9,6 +9,7 @@ import Complaint from "@/pages/Complaint";
 import Profile from "@/pages/Profile";
 import Admin from "@/pages/Admin";
 import AuthCallback from "@/pages/AuthCallback";
+import WhatsAppFab from "@/components/WhatsAppFab";
 
 function AppRouter() {
   const location = useLocation();
@@ -34,6 +35,7 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <AppRouter />
+          <WhatsAppFab />
           <Toaster position="top-center" richColors />
         </BrowserRouter>
       </AuthProvider>

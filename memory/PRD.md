@@ -42,7 +42,12 @@ Users are connected to different local laundry houses. Features required:
 ## What's Been Implemented (2026-01-11)
 - ✅ Full-stack scaffolding with React + FastAPI + MongoDB
 - ✅ Emergent Google OAuth (session cookie + Authorization header fallback)
-- ✅ Admin role via email allowlist, seeded on startup (admin@clengo.in)
+- ✅ Admin role via email allowlist: `admin@clengo.in`, `shubham2710gupta@gmail.com`
+- ✅ WhatsApp integration via `wa.me` deep links (Clengo business number: +91 63070 74843)
+  - Floating WhatsApp support FAB on every page
+  - "Confirm on WhatsApp" button on order confirmation with prefilled order details
+  - "Chat about this order" link on each My Orders card
+  - Admin: "WhatsApp customer" quick action on each order row
 - ✅ Pincode serviceability API + 12 seeded areas (Delhi/Noida/Gurgaon)
 - ✅ Catalog with 16 items across daily/ethnic/household/premium categories
 - ✅ 4-step order booking flow (pincode → items → pickup → confirm)

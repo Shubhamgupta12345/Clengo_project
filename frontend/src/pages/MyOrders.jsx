@@ -4,8 +4,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import api from "@/lib/api";
 import { useAuth, loginWithGoogle } from "@/context/AuthContext";
-import { ShoppingBag, ArrowRight, Package, Copy, Check } from "lucide-react";
+import { ShoppingBag, ArrowRight, Package, Copy, Check, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
+import { useClengoWhatsApp, waLink, orderConfirmationText } from "@/lib/whatsapp";
 
 const STATUS_META = {
   pending: { label: "Pending pickup", color: "bg-amber-100 text-amber-800 border-amber-200" },
@@ -94,6 +95,7 @@ function OrderCard({ order, onCopy, copied }) {
   const meta = STATUS_META[order.status] || STATUS_META.pending;
   const stepIndex = TIMELINE.indexOf(order.status);
   const services = [...new Set(order.items.map(i => i.service))].join(", ");
+  const clengoWa = useClengoWhatsApp();
 
   return (
     <div className="rounded-3xl bg-white border border-black/5 p-6 md:p-7 hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-shadow" data-testid={`order-card-${order.order_id}`}>
@@ -152,6 +154,15 @@ function OrderCard({ order, onCopy, copied }) {
         <Link to="/complaint" state={{ orderId: order.order_id }} className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#B88A14] hover:text-[#D4A017]" data-testid={`raise-complaint-${order.order_id}`}>
           Raise a complaint <ArrowRight size={12} />
         </Link>
+        <a
+          href={waLink(clengoWa, orderConfirmationText(order))}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-testid={`whatsapp-order-${order.order_id}`}
+          className="ml-4 mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#25D366] hover:text-[#128C7E]"
+        >
+          <MessageCircle size={12} /> Chat about this order
+        </a>
       </details>
     </div>
   );

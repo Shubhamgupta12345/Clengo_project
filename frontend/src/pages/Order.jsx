@@ -6,7 +6,8 @@ import PincodeChecker from "@/components/PincodeChecker";
 import api from "@/lib/api";
 import { useAuth, loginWithGoogle } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { Minus, Plus, ShoppingBag, MapPin, Calendar, Clock, Phone, ArrowRight, CheckCircle2, Sparkles, Droplets, Wind, ChevronRight, Loader2 } from "lucide-react";
+import { Minus, Plus, ShoppingBag, MapPin, Calendar, Clock, Phone, ArrowRight, CheckCircle2, Sparkles, Droplets, Wind, ChevronRight, Loader2, MessageCircle } from "lucide-react";
+import { useClengoWhatsApp, waLink, orderConfirmationText } from "@/lib/whatsapp";
 
 const SERVICES = [
   { key: "wash", label: "Wash & Fold", icon: Droplets, tag: "Everyday" },
@@ -25,6 +26,7 @@ const SLOTS = [
 export default function Order() {
   const { user, loading, refreshUser } = useAuth();
   const navigate = useNavigate();
+  const clengoWa = useClengoWhatsApp();
 
   const [step, setStep] = useState(1); // 1: pincode, 2: service+items, 3: pickup, 4: confirm
   const [pincode, setPincode] = useState(user?.pincode || "");
@@ -138,6 +140,15 @@ export default function Order() {
             </div>
 
             <div className="mt-10 flex flex-col sm:flex-row justify-center gap-3">
+              <a
+                href={waLink(clengoWa, orderConfirmationText(placedOrder))}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid="whatsapp-confirm-order-btn"
+                className="px-6 py-3 bg-[#25D366] text-white rounded-full font-bold hover:bg-[#128C7E] transition-colors inline-flex items-center justify-center gap-2"
+              >
+                <MessageCircle size={16} /> Confirm on WhatsApp
+              </a>
               <button onClick={() => navigate("/my-orders")} data-testid="view-my-orders-btn" className="px-6 py-3 bg-[#111] text-white rounded-full font-semibold hover:bg-[#D4A017] hover:text-black transition-colors">
                 Track my orders
               </button>
@@ -145,6 +156,7 @@ export default function Order() {
                 Book another
               </button>
             </div>
+            <p className="mt-4 text-xs text-black/50">💡 Tap "Confirm on WhatsApp" to quickly share your order details with our team — you'll get faster updates!</p>
           </div>
         </div>
         <Footer />

@@ -29,8 +29,10 @@ app = FastAPI(title="Clengo API")
 api_router = APIRouter(prefix="/api")
 
 # ============ Constants ============
-ADMIN_EMAILS = {"admin@clengo.in"}
+ADMIN_EMAILS = {"admin@clengo.in", "shubham2710gupta@gmail.com"}
 EMERGENT_AUTH_URL = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
+# Clengo business WhatsApp number (E.164, digits only, incl. country code)
+CLENGO_WHATSAPP = "916307074843"
 
 # ============ Utils ============
 def now_utc():
@@ -598,6 +600,11 @@ async def seed_startup():
 @api_router.get("/")
 async def root():
     return {"message": "Clengo API", "version": "1.0"}
+
+@api_router.get("/config")
+async def get_config():
+    """Public config: brand number, etc."""
+    return {"whatsapp_number": CLENGO_WHATSAPP}
 
 # Include the router in the main app
 app.include_router(api_router)

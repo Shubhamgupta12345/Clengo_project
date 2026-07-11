@@ -4,8 +4,9 @@ import Navbar from "@/components/Navbar";
 import api from "@/lib/api";
 import { API } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
-import { Download, Filter, Search, ShoppingBag, IndianRupee, AlertCircle, Users, Loader2, CheckCircle2, X, MessageCircleWarning, MapPin, Plus, Trash2 } from "lucide-react";
+import { Download, Filter, Search, ShoppingBag, IndianRupee, AlertCircle, Users, Loader2, CheckCircle2, X, MessageCircleWarning, MapPin, Plus, Trash2, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
+import { waLink, adminContactCustomerText } from "@/lib/whatsapp";
 
 const STATUS_LIST = ["pending", "picked_up", "in_process", "out_for_delivery", "completed", "cancelled"];
 const STATUS_LABELS = {
@@ -218,17 +219,29 @@ function OrdersTab() {
                     <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${STATUS_COLORS[o.status]}`}>{STATUS_LABELS[o.status]}</span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    {o.status !== "completed" && o.status !== "cancelled" ? (
-                      <button
-                        onClick={() => updateStatus(o.order_id, "completed")}
-                        data-testid={`mark-complete-${o.order_id}`}
-                        className="px-3 py-1.5 text-xs font-bold rounded-full border-2 border-[#D4A017] text-[#B88A14] hover:bg-[#D4A017] hover:text-black transition-colors"
+                    <div className="inline-flex items-center gap-2 justify-end">
+                      <a
+                        href={waLink(o.contact_phone.replace(/\D/g, "").length === 10 ? `91${o.contact_phone.replace(/\D/g, "")}` : o.contact_phone.replace(/\D/g, ""), adminContactCustomerText(o))}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-testid={`admin-whatsapp-${o.order_id}`}
+                        title="WhatsApp customer"
+                        className="w-8 h-8 rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white transition-colors inline-flex items-center justify-center"
                       >
-                        Mark Complete
-                      </button>
-                    ) : (
-                      <span className="text-[10px] text-black/30 uppercase tracking-widest">—</span>
-                    )}
+                        <MessageCircle size={14} />
+                      </a>
+                      {o.status !== "completed" && o.status !== "cancelled" ? (
+                        <button
+                          onClick={() => updateStatus(o.order_id, "completed")}
+                          data-testid={`mark-complete-${o.order_id}`}
+                          className="px-3 py-1.5 text-xs font-bold rounded-full border-2 border-[#D4A017] text-[#B88A14] hover:bg-[#D4A017] hover:text-black transition-colors"
+                        >
+                          Mark Complete
+                        </button>
+                      ) : (
+                        <span className="text-[10px] text-black/30 uppercase tracking-widest">—</span>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
