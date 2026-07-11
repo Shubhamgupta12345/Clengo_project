@@ -4,9 +4,10 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import api from "@/lib/api";
 import { useAuth, loginWithGoogle } from "@/context/AuthContext";
-import { ShoppingBag, ArrowRight, Package, Copy, Check, MessageCircle } from "lucide-react";
+import { ShoppingBag, ArrowRight, Package, Copy, Check, XCircle, Star, Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { useClengoWhatsApp, waLink, orderConfirmationText } from "@/lib/whatsapp";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 
 const STATUS_META = {
   pending: { label: "Pending pickup", color: "bg-amber-100 text-amber-800 border-amber-200" },
@@ -26,10 +27,15 @@ export default function MyOrders() {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(null);
 
+  const refetch = async () => {
+    const { data } = await api.get("/orders/me");
+    setOrders(data);
+  };
+
   useEffect(() => {
     if (loading) return;
     if (!user) return;
-    api.get("/orders/me").then(({ data }) => setOrders(data)).finally(() => setFetching(false));
+    refetch().finally(() => setFetching(false));
   }, [user, loading]);
 
   const copyId = (id) => {
@@ -37,6 +43,28 @@ export default function MyOrders() {
     setCopied(id);
     toast.success("Order ID copied");
     setTimeout(() => setCopied(null), 1500);
+  };
+
+  const cancelOrder = async (order_id) => {
+    const reason = window.prompt("Reason for cancellation? (optional)");
+    if (reason === null) return;
+    try {
+      const { data } = await api.post(`/orders/${order_id}/cancel`, { reason });
+      setOrders(prev => prev.map(o => o.order_id === order_id ? data : o));
+      toast.success("Order cancelled");
+    } catch (e) {
+      toast.error(e?.response?.data?.detail || "Failed to cancel");
+    }
+  };
+
+  const submitFeedback = async (order_id, rating, comment) => {
+    try {
+      const { data } = await api.post(`/orders/${order_id}/feedback`, { rating, comment });
+      setOrders(prev => prev.map(o => o.order_id === order_id ? data : o));
+      toast.success("Thanks for your feedback!");
+    } catch (e) {
+      toast.error(e?.response?.data?.detail || "Failed to submit feedback");
+    }
   };
 
   if (loading) return <div className="min-h-screen bg-[#FDFDFB]"><Navbar /></div>;
@@ -81,7 +109,7 @@ export default function MyOrders() {
         ) : (
           <div className="mt-10 space-y-4">
             {orders.map((o) => (
-              <OrderCard key={o.order_id} order={o} onCopy={copyId} copied={copied === o.order_id} />
+              <OrderCard key={o.order_id} order={o} onCopy={copyId} copied={copied === o.order_id} onCancel={cancelOrder} onFeedback={submitFeedback} />
             ))}
           </div>
         )}
@@ -91,11 +119,19 @@ export default function MyOrders() {
   );
 }
 
-function OrderCard({ order, onCopy, copied }) {
+function OrderCard({ order, onCopy, copied, onCancel, onFeedback }) {
   const meta = STATUS_META[order.status] || STATUS_META.pending;
   const stepIndex = TIMELINE.indexOf(order.status);
   const services = [...new Set(order.items.map(i => i.service))].join(", ");
   const clengoWa = useClengoWhatsApp();
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+
+  // Cancellation window: pending orders only, within 3 hours of creation
+  const createdAt = new Date(order.created_at);
+  const hoursSince = (Date.now() - createdAt.getTime()) / 3600000;
+  const canCancel = order.status === "pending" && hoursSince < 3;
+  const cancelSecondsLeft = Math.max(0, 3 * 3600 - Math.floor((Date.now() - createdAt.getTime()) / 1000));
+  const canRate = order.status === "completed" && !order.feedback_rating;
 
   return (
     <div className="rounded-3xl bg-white border border-black/5 p-5 sm:p-6 md:p-7 hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-shadow" data-testid={`order-card-${order.order_id}`}>
@@ -149,21 +185,69 @@ function OrderCard({ order, onCopy, copied }) {
                 <li key={i}>{it.item_name} × {it.quantity} <span className="text-[10px] uppercase tracking-wider text-[#D4A017]">{it.service}</span> — ₹{it.subtotal}</li>
               ))}
             </ul>
+            {order.discount > 0 && (
+              <p className="mt-2 text-xs text-[#B88A14] font-semibold">Discount applied: − ₹{order.discount}</p>
+            )}
           </div>
         </div>
-        <Link to="/complaint" state={{ orderId: order.order_id }} className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#B88A14] hover:text-[#D4A017]" data-testid={`raise-complaint-${order.order_id}`}>
-          Raise a complaint <ArrowRight size={12} />
-        </Link>
-        <a
-          href={waLink(clengoWa, orderConfirmationText(order))}
-          target="_blank"
-          rel="noopener noreferrer"
-          data-testid={`whatsapp-order-${order.order_id}`}
-          className="ml-4 mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#25D366] hover:text-[#128C7E]"
-        >
-          <MessageCircle size={12} /> Chat about this order
-        </a>
+        {order.feedback_rating && (
+          <div className="mt-4 rounded-xl bg-green-50 border border-green-200 p-3">
+            <p className="text-xs uppercase tracking-widest text-green-700 font-bold flex items-center gap-1">
+              <Check size={12} /> Your rating
+            </p>
+            <div className="mt-1 flex items-center gap-0.5 text-[#D4A017]">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} size={14} fill={i < order.feedback_rating ? "#D4A017" : "none"} />
+              ))}
+            </div>
+            {order.feedback_comment && <p className="mt-1 text-xs text-green-800">"{order.feedback_comment}"</p>}
+          </div>
+        )}
+        {order.status === "cancelled" && order.cancel_reason && (
+          <div className="mt-4 rounded-xl bg-red-50 border border-red-200 p-3 text-xs text-red-700">
+            <b>Cancelled</b> ({order.cancelled_by}): {order.cancel_reason}
+          </div>
+        )}
+        <div className="mt-4 flex items-center gap-4 flex-wrap">
+          <Link to="/complaint" state={{ orderId: order.order_id }} className="inline-flex items-center gap-1 text-xs font-semibold text-[#B88A14] hover:text-[#D4A017]" data-testid={`raise-complaint-${order.order_id}`}>
+            Raise a complaint <ArrowRight size={12} />
+          </Link>
+          <a
+            href={waLink(clengoWa, orderConfirmationText(order))}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid={`whatsapp-order-${order.order_id}`}
+            className="inline-flex items-center gap-1 text-xs font-semibold text-[#25D366] hover:text-[#128C7E]"
+          >
+            <WhatsAppIcon size={12} /> Chat about this order
+          </a>
+          {canCancel && (
+            <button
+              onClick={() => onCancel(order.order_id)}
+              data-testid={`cancel-order-${order.order_id}`}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 hover:text-red-800"
+            >
+              <XCircle size={12} /> Cancel order ({Math.floor(cancelSecondsLeft / 60)}m left)
+            </button>
+          )}
+          {canRate && (
+            <button
+              onClick={() => setFeedbackOpen(true)}
+              data-testid={`rate-order-${order.order_id}`}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-[#D4A017] hover:text-[#B88A14]"
+            >
+              <Star size={12} /> Rate this order
+            </button>
+          )}
+        </div>
       </details>
+      {feedbackOpen && (
+        <FeedbackModal
+          order={order}
+          onClose={() => setFeedbackOpen(false)}
+          onSubmit={(rating, comment) => { onFeedback(order.order_id, rating, comment); setFeedbackOpen(false); }}
+        />
+      )}
     </div>
   );
 }

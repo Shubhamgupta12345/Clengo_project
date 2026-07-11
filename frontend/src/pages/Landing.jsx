@@ -3,8 +3,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PincodeChecker from "@/components/PincodeChecker";
 import Logo from "@/components/Logo";
-import { Sparkles, Shirt, Wind, Droplets, Truck, Clock, Shield, Star, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Sparkles, Shirt, Wind, Droplets, Truck, Clock, Shield, Star, ArrowRight, CheckCircle2, Tag, Info, MapPin } from "lucide-react";
 import { useAuth, loginWithGoogle } from "@/context/AuthContext";
+import { useSettings, useOffers, usePincodes } from "@/lib/hooks";
 
 const services = [
   {
@@ -50,6 +51,11 @@ const promises = [
 export default function Landing() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const settings = useSettings();
+  const offers = useOffers();
+  const pincodes = usePincodes();
+
+  const activeOffers = offers.filter(o => o.active).sort((a, b) => a.threshold - b.threshold);
 
   return (
     <div className="min-h-screen bg-[#FDFDFB]" data-testid="landing-page">
@@ -121,6 +127,21 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* OFFERS STRIP */}
+      {activeOffers.length > 0 && (
+        <section className="bg-[#111] text-white py-3 md:py-4 overflow-hidden border-y border-white/5" data-testid="offers-strip">
+          <div className="flex whitespace-nowrap animate-marquee">
+            {[...activeOffers, ...activeOffers, ...activeOffers].map((o, i) => (
+              <span key={i} className="inline-flex items-center gap-2 px-5 sm:px-8 text-xs sm:text-sm">
+                <Tag size={14} className="text-[#D4A017] shrink-0" />
+                <span className="text-white/90">{o.label || `Save ₹${o.discount} on orders above ₹${o.threshold}`}</span>
+                <span className="text-[#D4A017] mx-4">✦</span>
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* SERVICES */}
       <section className="max-w-7xl mx-auto px-5 sm:px-6 md:px-10 py-14 md:py-20" data-testid="services-section">
@@ -230,6 +251,99 @@ export default function Landing() {
                 <p className="text-[10px] sm:text-xs uppercase tracking-wider text-white/50 mt-1">Average turnaround</p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* OFFERS CARDS */}
+      {activeOffers.length > 0 && (
+        <section id="offers" className="max-w-7xl mx-auto px-5 sm:px-6 md:px-10 py-14 md:py-20" data-testid="offers-section">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8 md:mb-12">
+            <div>
+              <p className="text-[10px] sm:text-xs tracking-[0.24em] uppercase font-bold text-[#D4A017]">Limited time</p>
+              <h2 className="mt-3 font-heading text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight">
+                Save more on every basket.
+              </h2>
+            </div>
+            <p className="text-sm sm:text-base text-black/60 max-w-md">
+              Automatic discounts — no coupons, no codes. The best offer for your cart is applied at checkout.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
+            {activeOffers.map((o, i) => (
+              <div
+                key={o.offer_id || i}
+                data-testid={`offer-card-${o.threshold}`}
+                className="group relative rounded-3xl bg-gradient-to-br from-[#FDF6E3] to-white p-5 md:p-7 border-2 border-dashed border-[#D4A017]/40 hover:border-[#D4A017] hover:-translate-y-1 transition-[transform,border-color] duration-300"
+              >
+                <div className="absolute -top-3 left-5 bg-[#D4A017] text-black text-[10px] tracking-widest uppercase font-bold px-3 py-1 rounded-full">
+                  Deal {i + 1}
+                </div>
+                <p className="font-heading text-3xl md:text-5xl font-extrabold text-[#B88A14] mt-3">
+                  ₹{o.discount}
+                </p>
+                <p className="mt-1 text-[10px] sm:text-xs uppercase tracking-widest text-black/50 font-bold">off</p>
+                <p className="mt-4 text-xs sm:text-sm text-black/70">
+                  On orders above <span className="font-bold">₹{o.threshold}</span>
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ABOUT & SERVICEABLE AREAS */}
+      <section id="about" className="max-w-7xl mx-auto px-5 sm:px-6 md:px-10 py-14 md:py-20 grid grid-cols-1 lg:grid-cols-5 gap-6 md:gap-10" data-testid="about-section">
+        <div className="lg:col-span-3 rounded-3xl bg-[#F7F6F2] border border-black/5 p-6 sm:p-8 md:p-10">
+          <div className="inline-flex items-center gap-2 text-[#D4A017]">
+            <Info size={16} />
+            <p className="text-[10px] sm:text-xs tracking-[0.24em] uppercase font-bold">About Clengo</p>
+          </div>
+          <h2 className="mt-4 font-heading text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight leading-tight max-w-2xl">
+            {settings.company_name || "Clengo Laundry Pvt. Ltd."}
+          </h2>
+          <p className="mt-5 md:mt-6 text-sm sm:text-base text-black/70 leading-relaxed whitespace-pre-line">
+            {settings.company_about || "Loading..."}
+          </p>
+          <div className="mt-6 md:mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
+            {[
+              { k: "Founded", v: "2026" },
+              { k: "HQ", v: "Delhi NCR" },
+              { k: "Turnaround", v: "48 hrs" },
+              { k: "Payment", v: "COD" },
+            ].map(kv => (
+              <div key={kv.k} className="rounded-2xl bg-white border border-black/5 p-3 md:p-4">
+                <p className="text-[10px] uppercase tracking-widest text-black/40 font-bold">{kv.k}</p>
+                <p className="mt-1 font-heading text-sm sm:text-lg font-bold">{kv.v}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div id="areas" className="lg:col-span-2 rounded-3xl bg-[#111] text-white p-6 sm:p-8 md:p-10 relative overflow-hidden" data-testid="areas-section">
+          <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-[#D4A017]/25 blur-3xl" />
+          <div className="inline-flex items-center gap-2 text-[#D4A017] relative">
+            <MapPin size={16} />
+            <p className="text-[10px] sm:text-xs tracking-[0.24em] uppercase font-bold">Serviceable areas</p>
+          </div>
+          <h3 className="mt-4 font-heading text-2xl sm:text-3xl font-semibold tracking-tight relative">
+            We're picking up in <span className="text-[#D4A017]">{pincodes.length}</span> pincodes
+          </h3>
+          <p className="mt-2 text-xs sm:text-sm text-white/50 relative">
+            Delhi · Noida · Gurgaon (and expanding weekly)
+          </p>
+          <div className="mt-5 md:mt-6 max-h-72 overflow-y-auto pr-2 relative">
+            <ul className="space-y-2 text-xs sm:text-sm">
+              {pincodes.map(p => (
+                <li key={p.pincode} className="flex items-center justify-between border-b border-white/5 pb-2" data-testid={`area-row-${p.pincode}`}>
+                  <span>
+                    <span className="font-medium">{p.area}</span>
+                    <span className="text-white/40 ml-2">· {p.city}</span>
+                  </span>
+                  <span className="font-mono text-[#D4A017]">{p.pincode}</span>
+                </li>
+              ))}
+              {pincodes.length === 0 && <li className="text-white/40 text-xs">Loading areas...</li>}
+            </ul>
           </div>
         </div>
       </section>

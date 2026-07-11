@@ -6,8 +6,10 @@ import PincodeChecker from "@/components/PincodeChecker";
 import api from "@/lib/api";
 import { useAuth, loginWithGoogle } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { Minus, Plus, ShoppingBag, MapPin, Calendar, Clock, Phone, ArrowRight, CheckCircle2, Sparkles, Droplets, Wind, ChevronRight, Loader2, MessageCircle } from "lucide-react";
+import { Minus, Plus, ShoppingBag, MapPin, Calendar, Clock, Phone, ArrowRight, CheckCircle2, Sparkles, Droplets, Wind, ChevronRight, Loader2, Tag } from "lucide-react";
 import { useClengoWhatsApp, waLink, orderConfirmationText } from "@/lib/whatsapp";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
+import { useOffers, useSettings, bestOfferFor } from "@/lib/hooks";
 
 const SERVICES = [
   { key: "wash", label: "Wash & Fold", icon: Droplets, tag: "Everyday" },
@@ -27,6 +29,9 @@ export default function Order() {
   const { user, loading, refreshUser } = useAuth();
   const navigate = useNavigate();
   const clengoWa = useClengoWhatsApp();
+  const offers = useOffers();
+  const settings = useSettings();
+  const minOrderValue = settings.min_order_value ?? 199;
 
   const [step, setStep] = useState(1); // 1: pincode, 2: service+items, 3: pickup, 4: confirm
   const [pincode, setPincode] = useState(user?.pincode || "");
@@ -75,7 +80,11 @@ export default function Order() {
   }, [cart, catalog]);
 
   const totalItems = cartLines.reduce((s, l) => s + l.quantity, 0);
-  const totalAmount = cartLines.reduce((s, l) => s + l.subtotal, 0);
+  const subtotalAmount = cartLines.reduce((s, l) => s + l.subtotal, 0);
+  const bestOffer = bestOfferFor(subtotalAmount, offers);
+  const discount = bestOffer ? bestOffer.discount : 0;
+  const totalAmount = Math.max(0, subtotalAmount - discount);
+  const minShortfall = Math.max(0, minOrderValue - subtotalAmount);
 
   const cartKey = (itemId) => `${itemId}__${service}`;
   const qtyOf = (itemId) => cart[cartKey(itemId)] || 0;
@@ -83,7 +92,7 @@ export default function Order() {
 
   const canProceed = {
     2: !!(pincode && pincodeArea),
-    3: totalItems > 0,
+    3: totalItems > 0 && subtotalAmount >= minOrderValue,
     4: !!(address && phone && pickupDate && pickupSlot),
   };
 
@@ -147,7 +156,7 @@ export default function Order() {
                 data-testid="whatsapp-confirm-order-btn"
                 className="px-6 py-3 bg-[#25D366] text-white rounded-full font-bold hover:bg-[#128C7E] transition-colors inline-flex items-center justify-center gap-2"
               >
-                <MessageCircle size={16} /> Confirm on WhatsApp
+                <WhatsAppIcon size={16} /> Confirm on WhatsApp
               </a>
               <button onClick={() => navigate("/my-orders")} data-testid="view-my-orders-btn" className="px-6 py-3 bg-[#111] text-white rounded-full font-semibold hover:bg-[#D4A017] hover:text-black transition-colors">
                 Track my orders
@@ -291,13 +300,35 @@ export default function Order() {
                     ))}
                   </ul>
                 )}
-                <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-between">
-                  <span className="text-xs uppercase tracking-widest text-white/50">Total ({totalItems})</span>
-                  <span className="font-heading text-2xl font-bold" data-testid="cart-total">₹{totalAmount.toFixed(0)}</span>
+                <div className="mt-6 pt-5 border-t border-white/10 space-y-2">
+                  <div className="flex items-center justify-between text-xs text-white/60">
+                    <span>Subtotal ({totalItems} items)</span>
+                    <span className="font-mono">₹{subtotalAmount.toFixed(0)}</span>
+                  </div>
+                  {bestOffer && (
+                    <div className="flex items-center justify-between text-xs text-[#D4A017] font-semibold" data-testid="cart-discount">
+                      <span className="inline-flex items-center gap-1"><Tag size={11} /> Offer applied</span>
+                      <span className="font-mono">− ₹{discount.toFixed(0)}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                    <span className="text-xs uppercase tracking-widest text-white/50">You pay</span>
+                    <span className="font-heading text-2xl font-bold" data-testid="cart-total">₹{totalAmount.toFixed(0)}</span>
+                  </div>
+                  {minShortfall > 0 && (
+                    <p className="text-[11px] text-amber-400 mt-2" data-testid="min-order-warning">
+                      Add ₹{minShortfall.toFixed(0)} more to reach the ₹{minOrderValue} minimum order.
+                    </p>
+                  )}
+                  {!bestOffer && subtotalAmount > 0 && offers.filter(o => o.active).length > 0 && (
+                    <p className="text-[11px] text-white/50 mt-2" data-testid="next-offer-hint">
+                      💡 {nextOfferHint(subtotalAmount, offers)}
+                    </p>
+                  )}
                 </div>
                 <button
                   onClick={() => setStep(3)}
-                  disabled={totalItems === 0}
+                  disabled={totalItems === 0 || subtotalAmount < minOrderValue}
                   data-testid="step-2-next-btn"
                   className="mt-6 w-full py-3.5 bg-[#D4A017] text-black rounded-full font-bold hover:bg-white transition-colors disabled:opacity-40"
                 >
@@ -390,7 +421,7 @@ export default function Order() {
               </div>
             </div>
 
-            <MiniCart lines={cartLines} totalItems={totalItems} totalAmount={totalAmount} />
+            <MiniCart lines={cartLines} totalItems={totalItems} subtotalAmount={subtotalAmount} discount={discount} totalAmount={totalAmount} bestOffer={bestOffer} />
           </div>
         )}
 
@@ -416,6 +447,16 @@ export default function Order() {
                   </ul>
                 </div>
                 <div className="pt-4 flex items-center justify-between border-t border-black/10">
+                  <span className="font-heading text-lg font-semibold">Subtotal</span>
+                  <span className="font-mono">₹{subtotalAmount.toFixed(0)}</span>
+                </div>
+                {bestOffer && (
+                  <div className="flex items-center justify-between text-[#B88A14]" data-testid="review-discount">
+                    <span className="inline-flex items-center gap-1 text-sm font-semibold"><Tag size={13} /> Offer discount</span>
+                    <span className="font-mono font-semibold">− ₹{discount.toFixed(0)}</span>
+                  </div>
+                )}
+                <div className="pt-3 flex items-center justify-between border-t border-black/10">
                   <span className="font-heading text-lg font-semibold">Total (COD)</span>
                   <span className="font-heading text-3xl font-bold text-[#D4A017]" data-testid="final-total">₹{totalAmount.toFixed(0)}</span>
                 </div>
@@ -436,13 +477,20 @@ export default function Order() {
               </div>
             </div>
 
-            <MiniCart lines={cartLines} totalItems={totalItems} totalAmount={totalAmount} />
+            <MiniCart lines={cartLines} totalItems={totalItems} subtotalAmount={subtotalAmount} discount={discount} totalAmount={totalAmount} bestOffer={bestOffer} />
           </div>
         )}
       </div>
       <Footer />
     </div>
   );
+}
+
+function nextOfferHint(subtotal, offers) {
+  const upcoming = offers.filter(o => o.active && subtotal < o.threshold).sort((a, b) => a.threshold - b.threshold)[0];
+  if (!upcoming) return null;
+  const need = upcoming.threshold - subtotal;
+  return `Add ₹${need.toFixed(0)} more to unlock ₹${upcoming.discount} off!`;
 }
 
 function SummaryRow({ label, value }) {
@@ -454,7 +502,7 @@ function SummaryRow({ label, value }) {
   );
 }
 
-function MiniCart({ lines, totalItems, totalAmount }) {
+function MiniCart({ lines, totalItems, subtotalAmount, discount, totalAmount, bestOffer }) {
   return (
     <div className="lg:col-span-1">
       <div className="rounded-3xl bg-[#F7F6F2] border border-black/5 p-6 sticky top-24">
@@ -467,9 +515,21 @@ function MiniCart({ lines, totalItems, totalAmount }) {
             </li>
           ))}
         </ul>
-        <div className="mt-5 pt-4 border-t border-black/10 flex items-center justify-between">
-          <span className="text-sm">{totalItems} items</span>
-          <span className="font-heading text-xl font-bold">₹{totalAmount.toFixed(0)}</span>
+        <div className="mt-5 pt-4 border-t border-black/10 space-y-1.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-black/50">Subtotal ({totalItems})</span>
+            <span className="font-mono">₹{subtotalAmount.toFixed(0)}</span>
+          </div>
+          {bestOffer && (
+            <div className="flex items-center justify-between text-xs text-[#B88A14] font-semibold">
+              <span className="inline-flex items-center gap-1"><Tag size={11} /> Offer</span>
+              <span className="font-mono">− ₹{discount.toFixed(0)}</span>
+            </div>
+          )}
+          <div className="flex items-center justify-between pt-2 border-t border-black/10">
+            <span className="text-sm font-semibold">You pay</span>
+            <span className="font-heading text-xl font-bold">₹{totalAmount.toFixed(0)}</span>
+          </div>
         </div>
       </div>
     </div>

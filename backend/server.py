@@ -105,6 +105,9 @@ class Order(BaseModel):
     contact_phone: str
     items: List[OrderLine]
     total_items: int
+    subtotal: float = 0
+    discount: float = 0
+    offer_applied: Optional[str] = None
     total_amount: float
     pickup_address: str
     pickup_pincode: str
@@ -112,8 +115,13 @@ class Order(BaseModel):
     pickup_slot: str
     notes: Optional[str] = None
     status: str = "pending"  # pending | picked_up | in_process | out_for_delivery | completed | cancelled
+    cancel_reason: Optional[str] = None
+    cancelled_by: Optional[str] = None  # 'user' | 'admin'
     payment_method: str = "COD"
     payment_status: str = "pending"
+    feedback_rating: Optional[int] = None
+    feedback_comment: Optional[str] = None
+    feedback_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=now_utc)
     updated_at: datetime = Field(default_factory=now_utc)
 
@@ -139,6 +147,41 @@ class Complaint(BaseModel):
 class ComplaintUpdate(BaseModel):
     status: Optional[str] = None
     admin_response: Optional[str] = None
+
+class OfferModel(BaseModel):
+    offer_id: Optional[str] = None
+    threshold: float
+    discount: float
+    label: Optional[str] = None
+    active: bool = True
+
+class SettingsUpdate(BaseModel):
+    min_order_value: Optional[float] = None
+    company_name: Optional[str] = None
+    company_about: Optional[str] = None
+    contact_email: Optional[str] = None
+
+class CatalogItemInput(BaseModel):
+    item_id: Optional[str] = None
+    name: str
+    category: str
+    prices: Dict[str, float]
+    icon: str = "shirt"
+
+class BlocklistInput(BaseModel):
+    email: str
+    reason: Optional[str] = None
+
+class OrderCancelInput(BaseModel):
+    reason: Optional[str] = None
+
+class OrderRescheduleInput(BaseModel):
+    pickup_date: str
+    pickup_slot: str
+
+class FeedbackInput(BaseModel):
+    rating: int  # 1-5
+    comment: Optional[str] = None
 
 # ============ Auth Helpers ============
 async def get_session_token(request: Request) -> Optional[str]:
@@ -198,6 +241,12 @@ async def create_session(request: Request, response: Response):
     name = data["name"]
     picture = data.get("picture")
     session_token = data["session_token"]
+
+    # Block check
+    if email not in ADMIN_EMAILS:
+        blocked = await db.blocklist.find_one({"email": email})
+        if blocked:
+            raise HTTPException(status_code=403, detail="This account has been blocked. Contact support.")
 
     # Find or create user
     existing = await db.users.find_one({"email": email}, {"_id": 0})
@@ -288,6 +337,22 @@ async def get_catalog():
     return docs
 
 # ============ Orders ============
+async def _get_settings():
+    doc = await db.settings.find_one({"key": "global"}, {"_id": 0}) or {}
+    return {
+        "min_order_value": doc.get("min_order_value", 199),
+        "company_name": doc.get("company_name", "Clengo Laundry Pvt. Ltd."),
+        "company_about": doc.get("company_about", "Clengo is your neighbourhood laundry partner — premium wash, iron and dry-cleaning at your doorstep across Delhi NCR. We connect households with vetted, trained laundry houses in your area for reliable, damage-free, timely service."),
+        "contact_email": doc.get("contact_email", "clengo.in@gmail.com"),
+    }
+
+def _best_offer(subtotal: float, offers: list):
+    """Return the best applicable offer (highest discount) for a given subtotal."""
+    applicable = [o for o in offers if o.get("active") and subtotal >= o.get("threshold", 0)]
+    if not applicable:
+        return None
+    return max(applicable, key=lambda o: o.get("discount", 0))
+
 @api_router.post("/orders")
 async def create_order(order_data: OrderCreate, user: User = Depends(get_current_user)):
     # Validate pincode
@@ -298,7 +363,22 @@ async def create_order(order_data: OrderCreate, user: User = Depends(get_current
         raise HTTPException(status_code=400, detail="No items in order")
 
     total_items = sum(i.quantity for i in order_data.items)
-    total_amount = sum(i.subtotal for i in order_data.items)
+    subtotal = sum(i.subtotal for i in order_data.items)
+
+    # Min order value check
+    settings = await _get_settings()
+    if subtotal < settings["min_order_value"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Minimum order value is ₹{int(settings['min_order_value'])}. Add ₹{int(settings['min_order_value'] - subtotal)} more to place order."
+        )
+
+    # Compute discount from best applicable offer
+    offers = await db.offers.find({"active": True}, {"_id": 0}).to_list(100)
+    best = _best_offer(subtotal, offers)
+    discount = float(best["discount"]) if best else 0
+    offer_applied = best.get("offer_id") if best else None
+    total_amount = max(0, subtotal - discount)
 
     order = Order(
         order_id=gen_order_id(),
@@ -308,6 +388,9 @@ async def create_order(order_data: OrderCreate, user: User = Depends(get_current
         contact_phone=order_data.contact_phone,
         items=order_data.items,
         total_items=total_items,
+        subtotal=subtotal,
+        discount=discount,
+        offer_applied=offer_applied,
         total_amount=total_amount,
         pickup_address=order_data.pickup_address,
         pickup_pincode=order_data.pickup_pincode,
@@ -334,6 +417,72 @@ async def get_order(order_id: str, user: User = Depends(get_current_user)):
     if doc["user_id"] != user.user_id and user.role != "admin":
         raise HTTPException(status_code=403, detail="Forbidden")
     return doc
+
+# ============ User Order Actions ============
+@api_router.post("/orders/{order_id}/cancel")
+async def user_cancel_order(order_id: str, payload: OrderCancelInput, user: User = Depends(get_current_user)):
+    doc = await db.orders.find_one({"order_id": order_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if doc["user_id"] != user.user_id and user.role != "admin":
+        raise HTTPException(status_code=403, detail="Forbidden")
+    if doc.get("status") == "cancelled":
+        raise HTTPException(status_code=400, detail="Order is already cancelled")
+    if doc.get("status") not in ("pending", "picked_up") and user.role != "admin":
+        raise HTTPException(status_code=400, detail="Order can no longer be cancelled by user")
+
+    # Enforce 3-hour cancellation window for users (admins can cancel anytime)
+    if user.role != "admin":
+        try:
+            created = datetime.fromisoformat(doc["created_at"]) if isinstance(doc["created_at"], str) else doc["created_at"]
+            if created.tzinfo is None:
+                created = created.replace(tzinfo=timezone.utc)
+        except Exception:
+            created = now_utc()
+        if (now_utc() - created) > timedelta(hours=3):
+            raise HTTPException(status_code=400, detail="Cancellation window has passed. Orders can only be cancelled within 3 hours of placement.")
+
+    await db.orders.update_one(
+        {"order_id": order_id},
+        {"$set": {
+            "status": "cancelled",
+            "cancel_reason": payload.reason or "Cancelled by " + user.role,
+            "cancelled_by": user.role,
+            "updated_at": now_utc().isoformat(),
+        }},
+    )
+    return await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+
+@api_router.post("/orders/{order_id}/feedback")
+async def submit_feedback(order_id: str, payload: FeedbackInput, user: User = Depends(get_current_user)):
+    if payload.rating < 1 or payload.rating > 5:
+        raise HTTPException(status_code=400, detail="Rating must be between 1 and 5")
+    doc = await db.orders.find_one({"order_id": order_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if doc["user_id"] != user.user_id:
+        raise HTTPException(status_code=403, detail="Not your order")
+    if doc.get("status") != "completed":
+        raise HTTPException(status_code=400, detail="You can only rate completed orders")
+    await db.orders.update_one(
+        {"order_id": order_id},
+        {"$set": {
+            "feedback_rating": payload.rating,
+            "feedback_comment": payload.comment or "",
+            "feedback_at": now_utc().isoformat(),
+        }},
+    )
+    return await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+
+# ============ Public offers & settings ============
+@api_router.get("/offers")
+async def public_offers():
+    docs = await db.offers.find({"active": True}, {"_id": 0}).sort("threshold", 1).to_list(50)
+    return docs
+
+@api_router.get("/settings")
+async def public_settings():
+    return await _get_settings()
 
 # ============ Complaints ============
 @api_router.post("/complaints")
@@ -534,6 +683,121 @@ async def admin_delete_pincode(pincode: str, user: User = Depends(require_admin)
     await db.pincodes.delete_one({"pincode": pincode})
     return {"success": True}
 
+# ---- Catalog CRUD ----
+@api_router.post("/admin/catalog")
+async def admin_upsert_catalog(item: CatalogItemInput, user: User = Depends(require_admin)):
+    item_id = item.item_id or ("itm_" + uuid.uuid4().hex[:8])
+    doc = item.model_dump()
+    doc["item_id"] = item_id
+    existing = await db.catalog.find_one({"item_id": item_id})
+    if existing:
+        await db.catalog.update_one({"item_id": item_id}, {"$set": doc})
+    else:
+        await db.catalog.insert_one(doc)
+    return {k: v for k, v in doc.items() if k != "_id"}
+
+@api_router.delete("/admin/catalog/{item_id}")
+async def admin_delete_catalog(item_id: str, user: User = Depends(require_admin)):
+    r = await db.catalog.delete_one({"item_id": item_id})
+    if r.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return {"success": True}
+
+# ---- Offers CRUD ----
+@api_router.get("/admin/offers")
+async def admin_list_offers(user: User = Depends(require_admin)):
+    return await db.offers.find({}, {"_id": 0}).sort("threshold", 1).to_list(100)
+
+@api_router.post("/admin/offers")
+async def admin_upsert_offer(offer: OfferModel, user: User = Depends(require_admin)):
+    offer_id = offer.offer_id or ("off_" + uuid.uuid4().hex[:8])
+    doc = offer.model_dump()
+    doc["offer_id"] = offer_id
+    existing = await db.offers.find_one({"offer_id": offer_id})
+    if existing:
+        await db.offers.update_one({"offer_id": offer_id}, {"$set": doc})
+    else:
+        await db.offers.insert_one(doc)
+    return {k: v for k, v in doc.items() if k != "_id"}
+
+@api_router.delete("/admin/offers/{offer_id}")
+async def admin_delete_offer(offer_id: str, user: User = Depends(require_admin)):
+    r = await db.offers.delete_one({"offer_id": offer_id})
+    if r.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Offer not found")
+    return {"success": True}
+
+# ---- Settings ----
+@api_router.get("/admin/settings")
+async def admin_get_settings(user: User = Depends(require_admin)):
+    return await _get_settings()
+
+@api_router.patch("/admin/settings")
+async def admin_update_settings(payload: SettingsUpdate, user: User = Depends(require_admin)):
+    updates = {k: v for k, v in payload.model_dump().items() if v is not None}
+    if updates:
+        await db.settings.update_one(
+            {"key": "global"},
+            {"$set": {**updates, "key": "global"}},
+            upsert=True,
+        )
+    return await _get_settings()
+
+# ---- Blocklist ----
+@api_router.get("/admin/blocklist")
+async def admin_list_blocklist(user: User = Depends(require_admin)):
+    return await db.blocklist.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+
+@api_router.post("/admin/blocklist")
+async def admin_add_blocklist(payload: BlocklistInput, user: User = Depends(require_admin)):
+    email = payload.email.strip().lower()
+    if email in ADMIN_EMAILS:
+        raise HTTPException(status_code=400, detail="Cannot block an admin email")
+    entry = {"email": email, "reason": payload.reason or "", "created_at": now_utc().isoformat(), "blocked_by": user.email}
+    await db.blocklist.update_one({"email": email}, {"$set": entry}, upsert=True)
+    # Also invalidate any active sessions for this email
+    u = await db.users.find_one({"email": email})
+    if u:
+        await db.user_sessions.delete_many({"user_id": u["user_id"]})
+    return entry
+
+@api_router.delete("/admin/blocklist/{email}")
+async def admin_remove_blocklist(email: str, user: User = Depends(require_admin)):
+    await db.blocklist.delete_one({"email": email.lower()})
+    return {"success": True}
+
+# ---- Order cancel & reschedule (admin) ----
+@api_router.post("/admin/orders/{order_id}/cancel")
+async def admin_cancel_order(order_id: str, payload: OrderCancelInput, user: User = Depends(require_admin)):
+    doc = await db.orders.find_one({"order_id": order_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Order not found")
+    await db.orders.update_one(
+        {"order_id": order_id},
+        {"$set": {
+            "status": "cancelled",
+            "cancel_reason": payload.reason or "Cancelled by admin",
+            "cancelled_by": "admin",
+            "updated_at": now_utc().isoformat(),
+        }},
+    )
+    return await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+
+@api_router.post("/admin/orders/{order_id}/reschedule")
+async def admin_reschedule_order(order_id: str, payload: OrderRescheduleInput, user: User = Depends(require_admin)):
+    doc = await db.orders.find_one({"order_id": order_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Order not found")
+    await db.orders.update_one(
+        {"order_id": order_id},
+        {"$set": {
+            "pickup_date": payload.pickup_date,
+            "pickup_slot": payload.pickup_slot,
+            "updated_at": now_utc().isoformat(),
+        }},
+    )
+    return await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+
 # ============ Seed Data ============
 @app.on_event("startup")
 async def seed_startup():
@@ -596,6 +860,37 @@ async def seed_startup():
             })
         else:
             await db.users.update_one({"email": admin_email}, {"$set": {"role": "admin"}})
+
+    # Seed offers
+    if await db.offers.count_documents({}) == 0:
+        default_offers = [
+            {"offer_id": "off_349", "threshold": 349, "discount": 100, "label": "Save ₹100 on orders above ₹349", "active": True},
+            {"offer_id": "off_499", "threshold": 499, "discount": 149, "label": "Save ₹149 on orders above ₹499", "active": True},
+            {"offer_id": "off_599", "threshold": 599, "discount": 200, "label": "Save ₹200 on orders above ₹599", "active": True},
+            {"offer_id": "off_799", "threshold": 799, "discount": 300, "label": "Save ₹300 on orders above ₹799", "active": True},
+        ]
+        await db.offers.insert_many(default_offers)
+        logging.info(f"Seeded {len(default_offers)} offers")
+
+    # Seed global settings
+    existing_settings = await db.settings.find_one({"key": "global"})
+    if not existing_settings:
+        await db.settings.insert_one({
+            "key": "global",
+            "min_order_value": 199,
+            "company_name": "Clengo Laundry Pvt. Ltd.",
+            "company_about": (
+                "Clengo (Clengo Laundry Pvt. Ltd.) is a Delhi NCR based on-demand laundry service that connects "
+                "urban households with vetted neighbourhood laundry houses. Founded in 2026, our mission is simple: "
+                "give every family back the time they'd otherwise spend on laundry. We handle everything — pickup, "
+                "washing, ironing, dry-cleaning, folding and doorstep delivery — through a network of trained "
+                "local partners who care about your clothes the way you do. Every order is tracked with a unique "
+                "Order ID, protected against damage, and delivered in 48 hours. Cash on Delivery. No hidden charges. "
+                "Just freshness, delivered."
+            ),
+            "contact_email": "clengo.in@gmail.com",
+        })
+        logging.info("Seeded default settings")
 
 @api_router.get("/")
 async def root():
