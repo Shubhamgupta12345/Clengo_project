@@ -1,0 +1,49 @@
+{
+  "summary": "Backend-only testing of Clengo laundry service API. Wrote pytest suite (43 tests) covering pincodes, catalog, auth gating (Emergent session model - tokens seeded via mongosh), orders (create with unique CLG-YYMMDD-XXXXXX ID, ownership isolation, pincode gating), complaints (order ownership check), and admin endpoints (stats, orders + filters, status update, xlsx export, complaints, pincode CRUD). All 43 tests PASS.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/orders", "issue": "Returns 200 on successful create; convention would be 201 Created. Non-blocking."},
+      {"endpoint": "POST /api/complaints", "issue": "Also returns 200; 201 would be more RESTful."},
+      {"endpoint": "GET /api/admin/orders (date filter)", "issue": "created_at is stored as ISO string (not BSON Date). String range comparisons work only because ISO-8601 sorts lexicographically. Fragile if timezone offsets are ever mixed. Consider storing as BSON Date."},
+      {"endpoint": "POST /api/auth/session", "issue": "Sets cookie with samesite='none' and secure=True — correct for cross-site, but hard-coded. If the frontend is ever served from same origin over http (dev), cookie will be dropped. Not exercised in tests (Emergent OAuth is out of scope), only existence of endpoint verified."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_clengo_backend.py",
+    "/app/backend/tests/conftest.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "(Optional) Return 201 on POST /api/orders and POST /api/complaints for RESTful correctness.",
+    "(Optional) Store orders.created_at as BSON Date (not ISO string) so date-range filtering is index-friendly and timezone-safe.",
+    "(Optional) Add server-side re-validation of item unit_price/subtotal against catalog to prevent tampered totals from the client."
+  ],
+  "critical_code_review_comments": [
+    "server.py is 622 lines — approaching the 700-line threshold. Consider splitting into routers/auth.py, routers/orders.py, routers/admin.py, models.py, deps.py once more features are added.",
+    "OrderCreate accepts client-supplied unit_price and subtotal without server-side re-computation from the catalog. A malicious client could send subtotal=0. Recommend recomputing prices server-side from the catalog before persisting.",
+    "Startup hook uses deprecated @app.on_event('startup'/'shutdown'). FastAPI recommends lifespan handlers; not blocking but will produce deprecation warnings on newer versions.",
+    "CORS is configured with allow_credentials=True and allow_origins='*' (default). This is invalid per the CORS spec (browsers will reject credentialed requests when Origin is '*'). Set CORS_ORIGINS to the specific frontend origin in .env for production.",
+    "Admin orders `service` filter uses `items.service` equality; if an order has multiple services it will still match, but the returned order includes all items (not just the matching service). Documented / acceptable, but front-end must be aware.",
+    "gen_order_id() uses only 6 hex chars = 24 bits of entropy. Collision probability is low at low volumes but a unique index on orders.order_id is recommended to guarantee uniqueness under concurrency.",
+    "No pagination on /api/admin/orders (to_list(2000)) or /api/admin/orders/export (to_list(10000)). Fine now, but will need pagination as data grows.",
+    "get_current_user does not refresh sliding session expiry — tokens hard-expire in 7 days. Acceptable, just noting."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_clengo_backend.py (new)",
+    "/app/backend/tests/conftest.py (new)",
+    "/app/memory/test_credentials.md (updated with fixture details)"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "not tested (skipped per request)"},
+  "test_credentials": "Sessions are seeded in Mongo by pytest fixture (see /app/backend/tests/conftest.py). Admin email admin@clengo.in is auto-seeded on backend startup with role='admin'.",
+  "seed_data_creation": "Pytest fixture 'seeded_tokens' inserts 2 regular users + admin session in MongoDB before test session, cleans up regular users after. Backend startup already seeds 12 pincodes, 16 catalog items, and admin user.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All 43 backend tests pass. To re-run: `pytest /app/backend/tests/ -v --junitxml=/app/test_reports/pytest/pytest_results.xml`. If you add new endpoints, extend TestAdmin/TestOrders/TestComplaints classes. Fixture `seeded_tokens` provides user_token, user2_token, admin_token via `Authorization: Bearer <token>`. Emergent OAuth /session-data call is external and is intentionally NOT exercised end-to-end (only the endpoint's existence and bad-request handling is tested).",
+  "rca of the issue": "No bugs found. All specified test cases in the review request pass: 12 pincodes returned, serviceable check works, 16 catalog items returned, /api/auth/me returns 401 without token, full auth-gated flow works via seeded sessions, POST /api/orders generates CLG- unique IDs and rejects unserviceable pincodes, /api/orders/me isolates by user, cross-user GET returns 403, complaints validate ownership, admin gate returns 403 for non-admin, status PATCH validates enum, .xlsx export returns spreadsheet content-type with PK zip signature, admin pincode CRUD upsert+delete works, all filters (search/status/pincode/service/date_from/date_to) on admin/orders work."
+}

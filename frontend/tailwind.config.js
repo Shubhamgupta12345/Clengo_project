@@ -12,7 +12,23 @@ module.exports = {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)'
       },
+      fontFamily: {
+        heading: ['Outfit', 'sans-serif'],
+        sans: ['Manrope', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+      },
       colors: {
+        clengo: {
+          gold: '#D4A017',
+          goldHover: '#B88A14',
+          goldLight: '#FDF6E3',
+          bg: '#FDFDFB',
+          bgAdmin: '#F4F5F7',
+          surface: '#F7F6F2',
+          heading: '#111111',
+          body: '#4A4A4A',
+          muted: '#767676',
+        },
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
