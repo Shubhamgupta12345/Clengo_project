@@ -119,27 +119,27 @@ export default function Order() {
     return (
       <div className="min-h-screen bg-[#FDFDFB]" data-testid="order-confirmation-page">
         <Navbar />
-        <div className="max-w-3xl mx-auto px-6 md:px-10 py-16">
-          <div className="rounded-3xl bg-white border border-black/5 shadow-[0_20px_60px_rgb(0,0,0,0.06)] p-10 text-center">
-            <div className="w-20 h-20 mx-auto rounded-full bg-green-100 flex items-center justify-center">
-              <CheckCircle2 size={44} className="text-green-600" />
+        <div className="max-w-3xl mx-auto px-5 sm:px-6 md:px-10 py-10 md:py-16">
+          <div className="rounded-3xl bg-white border border-black/5 shadow-[0_20px_60px_rgb(0,0,0,0.06)] p-6 sm:p-8 md:p-10 text-center">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-green-100 flex items-center justify-center">
+              <CheckCircle2 size={40} className="text-green-600" />
             </div>
-            <h1 className="mt-6 font-heading text-4xl font-bold">Order confirmed!</h1>
-            <p className="mt-3 text-black/60">Freshness is on the way. Save your Order ID for tracking.</p>
+            <h1 className="mt-5 md:mt-6 font-heading text-3xl sm:text-4xl font-bold">Order confirmed!</h1>
+            <p className="mt-3 text-sm sm:text-base text-black/60">Freshness is on the way. Save your Order ID for tracking.</p>
 
-            <div className="mt-8 inline-block px-8 py-5 rounded-2xl bg-[#FDF6E3] border-2 border-dashed border-[#D4A017]">
+            <div className="mt-6 md:mt-8 inline-block px-6 sm:px-8 py-4 sm:py-5 rounded-2xl bg-[#FDF6E3] border-2 border-dashed border-[#D4A017]">
               <p className="text-[10px] uppercase tracking-[0.24em] font-bold text-[#B88A14]">Your Order ID</p>
-              <p className="mt-2 font-mono text-2xl md:text-3xl font-bold text-black" data-testid="placed-order-id">{placedOrder.order_id}</p>
+              <p className="mt-2 font-mono text-xl sm:text-2xl md:text-3xl font-bold text-black break-all" data-testid="placed-order-id">{placedOrder.order_id}</p>
             </div>
 
-            <div className="mt-8 grid grid-cols-2 gap-4 text-left text-sm max-w-lg mx-auto">
+            <div className="mt-6 md:mt-8 grid grid-cols-2 gap-4 text-left text-sm max-w-lg mx-auto">
               <div><p className="text-black/50 text-xs uppercase tracking-wider">Total items</p><p className="mt-1 font-semibold">{placedOrder.total_items}</p></div>
               <div><p className="text-black/50 text-xs uppercase tracking-wider">Amount (COD)</p><p className="mt-1 font-semibold">₹{placedOrder.total_amount.toFixed(0)}</p></div>
               <div><p className="text-black/50 text-xs uppercase tracking-wider">Pickup date</p><p className="mt-1 font-semibold">{placedOrder.pickup_date}</p></div>
-              <div><p className="text-black/50 text-xs uppercase tracking-wider">Slot</p><p className="mt-1 font-semibold">{placedOrder.pickup_slot}</p></div>
+              <div><p className="text-black/50 text-xs uppercase tracking-wider">Slot</p><p className="mt-1 font-semibold text-sm">{placedOrder.pickup_slot}</p></div>
             </div>
 
-            <div className="mt-10 flex flex-col sm:flex-row justify-center gap-3">
+            <div className="mt-8 md:mt-10 flex flex-col sm:flex-row justify-center gap-3">
               <a
                 href={waLink(clengoWa, orderConfirmationText(placedOrder))}
                 target="_blank"
@@ -167,19 +167,19 @@ export default function Order() {
   return (
     <div className="min-h-screen bg-[#FDFDFB]" data-testid="order-page">
       <Navbar />
-      <div className="max-w-6xl mx-auto px-6 md:px-10 py-10 md:py-14">
-        <h1 className="font-heading text-4xl md:text-5xl font-bold tracking-tight">Book a pickup</h1>
-        <p className="mt-3 text-black/60">Four quick steps. No payment now — pay cash on delivery.</p>
+      <div className="max-w-6xl mx-auto px-5 sm:px-6 md:px-10 py-8 md:py-14">
+        <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">Book a pickup</h1>
+        <p className="mt-3 text-sm sm:text-base text-black/60">Four quick steps. No payment now — pay cash on delivery.</p>
 
         {/* STEP DOTS */}
-        <div className="mt-8 flex items-center gap-2 flex-wrap" data-testid="step-indicator">
+        <div className="mt-6 md:mt-8 flex items-center gap-1.5 sm:gap-2 flex-wrap" data-testid="step-indicator">
           {[1, 2, 3, 4].map((s) => (
-            <div key={s} className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${step >= s ? "bg-[#D4A017] text-black" : "bg-black/5 text-black/40"}`}>{s}</div>
-              <span className={`text-xs uppercase tracking-wider font-semibold ${step >= s ? "text-black" : "text-black/40"}`}>
+            <div key={s} className="flex items-center gap-1.5 sm:gap-2">
+              <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold ${step >= s ? "bg-[#D4A017] text-black" : "bg-black/5 text-black/40"}`}>{s}</div>
+              <span className={`text-[10px] sm:text-xs uppercase tracking-wider font-semibold ${step >= s ? "text-black" : "text-black/40"}`}>
                 {["Serviceability", "Items", "Pickup", "Confirm"][s - 1]}
               </span>
-              {s < 4 && <ChevronRight size={16} className="text-black/20 mx-1" />}
+              {s < 4 && <ChevronRight size={14} className="text-black/20 mx-0.5 sm:mx-1" />}
             </div>
           ))}
         </div>

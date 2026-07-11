@@ -60,31 +60,31 @@ export default function Landing() {
         <div className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full bg-[#D4A017]/10 blur-3xl pointer-events-none" />
         <div className="absolute top-40 -left-32 w-[400px] h-[400px] rounded-full bg-[#FDF6E3] blur-3xl pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-6 md:px-10 pt-14 md:pt-24 pb-20 grid md:grid-cols-12 gap-12 items-center relative">
-          <div className="md:col-span-7 animate-fade-up">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D4A017]/10 border border-[#D4A017]/20">
-              <span className="w-2 h-2 rounded-full bg-[#D4A017] animate-pulse" />
-              <span className="text-xs tracking-[0.2em] uppercase font-bold text-[#B88A14]">Now serving Delhi · Noida · Gurgaon</span>
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 md:px-10 pt-10 md:pt-24 pb-14 md:pb-20 grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-12 items-center relative">
+          <div className="md:col-span-7 animate-fade-up min-w-0">
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-[#D4A017]/10 border border-[#D4A017]/20 max-w-full">
+              <span className="w-2 h-2 rounded-full bg-[#D4A017] animate-pulse shrink-0" />
+              <span className="text-[10px] sm:text-xs tracking-[0.18em] sm:tracking-[0.2em] uppercase font-bold text-[#B88A14] truncate">Serving Delhi · Noida · Gurgaon</span>
             </div>
 
-            <h1 className="mt-6 font-heading font-extrabold text-5xl md:text-7xl tracking-tight leading-[1.02]">
+            <h1 className="mt-5 md:mt-6 font-heading font-extrabold text-[2.6rem] leading-[1.05] sm:text-5xl md:text-7xl tracking-tight md:leading-[1.02]">
               Laundry, but make it <span className="text-[#D4A017] text-shadow-gold">effortless.</span>
             </h1>
 
-            <p className="mt-6 max-w-xl text-lg text-black/60 leading-relaxed">
+            <p className="mt-5 md:mt-6 max-w-xl text-base md:text-lg text-black/60 leading-relaxed">
               Wash, iron & premium dry clean — picked up from your door, delivered fresh in 48 hours.
               Cash on delivery, unique order tracking, and a real human on call when you need us.
             </p>
 
-            <div className="mt-10 max-w-lg">
-              <p className="text-xs tracking-[0.24em] uppercase font-bold text-black/50 mb-3">Check serviceability</p>
+            <div className="mt-8 md:mt-10 max-w-lg">
+              <p className="text-[10px] sm:text-xs tracking-[0.24em] uppercase font-bold text-black/50 mb-3">Check serviceability</p>
               <PincodeChecker onServiceable={() => {}} />
             </div>
 
-            <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="mt-8 md:mt-10 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
               {promises.map((p) => (
-                <div key={p.label} className="flex items-center gap-2.5 text-sm text-black/70">
-                  <div className="w-9 h-9 rounded-xl bg-white shadow-sm border border-black/5 flex items-center justify-center">
+                <div key={p.label} className="flex items-center gap-2.5 text-xs sm:text-sm text-black/70">
+                  <div className="w-9 h-9 rounded-xl bg-white shadow-sm border border-black/5 flex items-center justify-center shrink-0">
                     <p.icon size={16} className="text-[#D4A017]" />
                   </div>
                   <span className="font-medium">{p.label}</span>
@@ -93,7 +93,7 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="md:col-span-5 relative animate-fade-up" style={{animationDelay: '0.15s', animationFillMode: 'both'}}>
+          <div className="md:col-span-5 relative animate-fade-up min-w-0" style={{animationDelay: '0.15s', animationFillMode: 'both'}}>
             <div className="relative rounded-[2.5rem] overflow-hidden aspect-[4/5] shadow-[0_30px_80px_rgb(0,0,0,0.12)] border border-black/5">
               <img
                 src="https://images.unsplash.com/photo-1709477542164-ae852db0d019?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODh8MHwxfHNlYXJjaHwyfHxoYXBweSUyMHBlcnNvbiUyMGRvaW5nJTIwbGF1bmRyeXxlbnwwfHx8fDE3ODI3MjczNzd8MA&ixlib=rb-4.1.0&q=85"
@@ -123,20 +123,20 @@ export default function Landing() {
       </section>
 
       {/* SERVICES */}
-      <section className="max-w-7xl mx-auto px-6 md:px-10 py-20" data-testid="services-section">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
+      <section className="max-w-7xl mx-auto px-5 sm:px-6 md:px-10 py-14 md:py-20" data-testid="services-section">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10 md:mb-12">
           <div>
-            <p className="text-xs tracking-[0.24em] uppercase font-bold text-[#D4A017]">What we do</p>
-            <h2 className="mt-3 font-heading text-4xl md:text-5xl font-semibold tracking-tight max-w-2xl">
+            <p className="text-[10px] sm:text-xs tracking-[0.24em] uppercase font-bold text-[#D4A017]">What we do</p>
+            <h2 className="mt-3 font-heading text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight max-w-2xl">
               Three services. Zero compromises.
             </h2>
           </div>
-          <p className="text-black/60 max-w-md">
+          <p className="text-sm sm:text-base text-black/60 max-w-md">
             From the shirt you wear every day to the saree passed down for generations — we treat every fabric with the care it deserves.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-5 md:gap-6">
           {services.map((s, i) => (
             <div
               key={s.key}
@@ -163,17 +163,17 @@ export default function Landing() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="bg-[#111] text-white py-20 relative overflow-hidden" data-testid="how-it-works-section">
+      <section className="bg-[#111] text-white py-14 md:py-20 relative overflow-hidden" data-testid="how-it-works-section">
         <div className="absolute inset-0 grain-overlay opacity-40 pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-6 md:px-10 relative">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 md:px-10 relative">
           <div className="max-w-2xl">
-            <p className="text-xs tracking-[0.24em] uppercase font-bold text-[#D4A017]">How it works</p>
-            <h2 className="mt-3 font-heading text-4xl md:text-5xl font-semibold tracking-tight">
+            <p className="text-[10px] sm:text-xs tracking-[0.24em] uppercase font-bold text-[#D4A017]">How it works</p>
+            <h2 className="mt-3 font-heading text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight">
               Four steps. From dirty to divine.
             </h2>
           </div>
 
-          <div className="mt-14 grid md:grid-cols-4 gap-6">
+          <div className="mt-10 md:mt-14 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             {steps.map((step, i) => (
               <div key={step.n} className="relative">
                 <div className="font-mono text-xs text-[#D4A017] tracking-widest">{step.n}</div>
@@ -186,48 +186,48 @@ export default function Landing() {
             ))}
           </div>
 
-          <div className="mt-16 flex flex-wrap items-center gap-4">
+          <div className="mt-12 md:mt-16 flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <button
               onClick={() => user ? navigate("/order") : loginWithGoogle()}
               data-testid="cta-book-now"
-              className="px-8 py-4 bg-[#D4A017] text-black font-bold rounded-full hover:bg-white transition-colors duration-300 active:scale-95 inline-flex items-center gap-2"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 bg-[#D4A017] text-black font-bold rounded-full hover:bg-white transition-colors duration-300 active:scale-95 inline-flex items-center justify-center gap-2"
             >
               Book your first order <ArrowRight size={18} />
             </button>
-            <p className="text-sm text-white/50">No prepayment. COD only. Pay when delivered.</p>
+            <p className="text-xs sm:text-sm text-white/50">No prepayment. COD only. Pay when delivered.</p>
           </div>
         </div>
       </section>
 
       {/* WHY CLENGO - bento */}
-      <section className="max-w-7xl mx-auto px-6 md:px-10 py-20" data-testid="why-clengo-section">
-        <div className="grid md:grid-cols-6 gap-5">
-          <div className="md:col-span-4 rounded-3xl bg-gradient-to-br from-[#FDF6E3] to-[#F7F6F2] p-8 md:p-10 border border-black/5">
-            <p className="text-xs tracking-[0.24em] uppercase font-bold text-[#D4A017]">Why Clengo</p>
-            <h3 className="mt-3 font-heading text-3xl md:text-4xl font-semibold tracking-tight leading-tight max-w-lg">
+      <section className="max-w-7xl mx-auto px-5 sm:px-6 md:px-10 py-14 md:py-20" data-testid="why-clengo-section">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 md:gap-5">
+          <div className="md:col-span-4 rounded-3xl bg-gradient-to-br from-[#FDF6E3] to-[#F7F6F2] p-7 sm:p-8 md:p-10 border border-black/5">
+            <p className="text-[10px] sm:text-xs tracking-[0.24em] uppercase font-bold text-[#D4A017]">Why Clengo</p>
+            <h3 className="mt-3 font-heading text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight leading-tight max-w-lg">
               We connect you with the best <em className="not-italic text-[#D4A017]">neighbourhood laundry houses</em> — vetted, trained, trusted.
             </h3>
-            <div className="mt-8 grid grid-cols-2 gap-4 max-w-xl">
+            <div className="mt-6 md:mt-8 grid grid-cols-2 gap-3 sm:gap-4 max-w-xl">
               {["Unique order ID", "Real-time status", "Damage protection", "Human support"].map(v => (
                 <div key={v} className="flex items-center gap-2">
                   <CheckCircle2 size={18} className="text-[#D4A017] shrink-0" />
-                  <span className="text-sm font-medium">{v}</span>
+                  <span className="text-xs sm:text-sm font-medium">{v}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="md:col-span-2 rounded-3xl bg-[#111] text-white p-8 md:p-10 relative overflow-hidden">
+          <div className="md:col-span-2 rounded-3xl bg-[#111] text-white p-7 sm:p-8 md:p-10 relative overflow-hidden">
             <div className="absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-[#D4A017]/30 blur-3xl" />
-            <p className="text-xs tracking-[0.24em] uppercase font-bold text-[#D4A017] relative">By the numbers</p>
-            <div className="mt-6 space-y-6 relative">
+            <p className="text-[10px] sm:text-xs tracking-[0.24em] uppercase font-bold text-[#D4A017] relative">By the numbers</p>
+            <div className="mt-5 md:mt-6 space-y-5 md:space-y-6 relative">
               <div>
-                <p className="font-heading text-5xl font-bold">12,400+</p>
-                <p className="text-xs uppercase tracking-wider text-white/50 mt-1">Happy customers</p>
+                <p className="font-heading text-4xl sm:text-5xl font-bold">12,400+</p>
+                <p className="text-[10px] sm:text-xs uppercase tracking-wider text-white/50 mt-1">Happy customers</p>
               </div>
               <div>
-                <p className="font-heading text-5xl font-bold">48<span className="text-lg text-white/50">hrs</span></p>
-                <p className="text-xs uppercase tracking-wider text-white/50 mt-1">Average turnaround</p>
+                <p className="font-heading text-4xl sm:text-5xl font-bold">48<span className="text-lg text-white/50">hrs</span></p>
+                <p className="text-[10px] sm:text-xs uppercase tracking-wider text-white/50 mt-1">Average turnaround</p>
               </div>
             </div>
           </div>
@@ -235,21 +235,21 @@ export default function Landing() {
       </section>
 
       {/* CTA */}
-      <section className="max-w-7xl mx-auto px-6 md:px-10 pb-20">
-        <div className="rounded-[2.5rem] bg-[#D4A017] p-10 md:p-16 relative overflow-hidden grain-overlay">
+      <section className="max-w-7xl mx-auto px-5 sm:px-6 md:px-10 pb-14 md:pb-20">
+        <div className="rounded-[2rem] md:rounded-[2.5rem] bg-[#D4A017] p-8 sm:p-10 md:p-16 relative overflow-hidden grain-overlay">
           <div className="grid md:grid-cols-2 gap-8 items-center relative">
             <div>
               <Logo size="lg" />
-              <h3 className="mt-6 font-heading text-4xl md:text-5xl font-bold tracking-tight leading-tight text-black">
+              <h3 className="mt-6 font-heading text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-tight text-black">
                 Freshness delivered<br/>at doorstep.
               </h3>
-              <p className="mt-4 text-black/70 max-w-md">Ready to say goodbye to laundry day? Sign in and book your first pickup.</p>
+              <p className="mt-4 text-sm sm:text-base text-black/70 max-w-md">Ready to say goodbye to laundry day? Sign in and book your first pickup.</p>
             </div>
             <div className="flex md:justify-end">
               <button
                 onClick={() => user ? navigate("/order") : loginWithGoogle()}
                 data-testid="cta-final-book"
-                className="px-8 py-4 bg-black text-white font-bold rounded-full hover:bg-white hover:text-black transition-colors duration-300 active:scale-95 inline-flex items-center gap-3 text-lg"
+                className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 bg-black text-white font-bold rounded-full hover:bg-white hover:text-black transition-colors duration-300 active:scale-95 inline-flex items-center justify-center gap-3 text-base sm:text-lg"
               >
                 {user ? "Book a pickup" : "Sign in with Google"} <ArrowRight size={20} />
               </button>

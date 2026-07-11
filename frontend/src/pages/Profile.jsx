@@ -40,8 +40,8 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-[#FDFDFB]" data-testid="profile-page">
       <Navbar />
-      <div className="max-w-2xl mx-auto px-6 py-10 md:py-14">
-        <div className="rounded-3xl bg-white border border-black/5 p-8">
+      <div className="max-w-2xl mx-auto px-5 sm:px-6 py-8 md:py-14">
+        <div className="rounded-3xl bg-white border border-black/5 p-6 sm:p-8">
           <div className="flex items-center gap-4">
             {user.picture ? (
               <img src={user.picture} alt={user.name} className="w-16 h-16 rounded-full ring-2 ring-[#D4A017]/30" />

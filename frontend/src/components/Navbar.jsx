@@ -14,7 +14,7 @@ export default function Navbar() {
       className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-black/5"
       data-testid="main-navbar"
     >
-      <div className="max-w-7xl mx-auto px-6 md:px-10 h-16 md:h-20 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 md:px-10 h-16 md:h-20 flex items-center justify-between">
         <Link to="/" data-testid="nav-home-link" className="flex items-center gap-3">
           <Logo size="md" withTagline />
         </Link>

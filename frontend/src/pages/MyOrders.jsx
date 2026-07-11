@@ -60,13 +60,13 @@ export default function MyOrders() {
   return (
     <div className="min-h-screen bg-[#FDFDFB]" data-testid="my-orders-page">
       <Navbar />
-      <div className="max-w-6xl mx-auto px-6 md:px-10 py-10 md:py-14">
+      <div className="max-w-6xl mx-auto px-5 sm:px-6 md:px-10 py-8 md:py-14">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div>
-            <h1 className="font-heading text-4xl md:text-5xl font-bold tracking-tight">My orders</h1>
-            <p className="mt-3 text-black/60">Track every pickup, wash and delivery.</p>
+            <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">My orders</h1>
+            <p className="mt-3 text-sm sm:text-base text-black/60">Track every pickup, wash and delivery.</p>
           </div>
-          <button onClick={() => navigate("/order")} data-testid="book-new-order-btn" className="inline-flex items-center gap-2 px-5 py-3 bg-[#D4A017] text-black rounded-full font-semibold hover:bg-black hover:text-white transition-colors">
+          <button onClick={() => navigate("/order")} data-testid="book-new-order-btn" className="inline-flex items-center gap-2 px-5 py-3 bg-[#D4A017] text-black rounded-full font-semibold hover:bg-black hover:text-white transition-colors w-full md:w-auto justify-center">
             <ShoppingBag size={16} /> Book new order
           </button>
         </div>
@@ -98,12 +98,12 @@ function OrderCard({ order, onCopy, copied }) {
   const clengoWa = useClengoWhatsApp();
 
   return (
-    <div className="rounded-3xl bg-white border border-black/5 p-6 md:p-7 hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-shadow" data-testid={`order-card-${order.order_id}`}>
+    <div className="rounded-3xl bg-white border border-black/5 p-5 sm:p-6 md:p-7 hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-shadow" data-testid={`order-card-${order.order_id}`}>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <p className="text-[10px] uppercase tracking-[0.24em] font-bold text-black/40">Order ID</p>
-            <button onClick={() => onCopy(order.order_id)} className="flex items-center gap-1 font-mono font-bold text-sm hover:text-[#D4A017]" data-testid={`copy-order-id-${order.order_id}`}>
+            <button onClick={() => onCopy(order.order_id)} className="flex items-center gap-1 font-mono font-bold text-xs sm:text-sm hover:text-[#D4A017] break-all" data-testid={`copy-order-id-${order.order_id}`}>
               {order.order_id}
               {copied ? <Check size={12} className="text-green-600" /> : <Copy size={12} className="opacity-50" />}
             </button>
@@ -112,9 +112,9 @@ function OrderCard({ order, onCopy, copied }) {
             {new Date(order.created_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })} · {order.total_items} items · <span className="uppercase tracking-wider">{services}</span>
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-widest border ${meta.color}`} data-testid={`order-status-${order.order_id}`}>{meta.label}</span>
-          <span className="font-heading text-2xl font-bold">₹{order.total_amount.toFixed(0)}</span>
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className={`px-3 py-1.5 rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-widest border ${meta.color}`} data-testid={`order-status-${order.order_id}`}>{meta.label}</span>
+          <span className="font-heading text-xl sm:text-2xl font-bold">₹{order.total_amount.toFixed(0)}</span>
         </div>
       </div>
 

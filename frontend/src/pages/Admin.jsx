@@ -42,17 +42,17 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-[#F4F5F7]" data-testid="admin-page">
       <Navbar />
-      <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-6 md:py-10">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-10">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.24em] font-bold text-[#D4A017]">Admin Control</p>
-            <h1 className="mt-1 font-heading text-3xl md:text-4xl font-bold tracking-tight">Clengo Operations</h1>
+            <p className="text-[10px] sm:text-xs uppercase tracking-[0.24em] font-bold text-[#D4A017]">Admin Control</p>
+            <h1 className="mt-1 font-heading text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">Clengo Operations</h1>
           </div>
         </div>
 
         <StatsCards />
 
-        <div className="mt-8 flex gap-2 border-b border-black/10">
+        <div className="mt-6 md:mt-8 flex gap-1 sm:gap-2 border-b border-black/10 overflow-x-auto">
           {[
             { key: "orders", label: "Orders", icon: ShoppingBag },
             { key: "complaints", label: "Complaints", icon: MessageCircleWarning },
@@ -62,7 +62,7 @@ export default function Admin() {
               key={t.key}
               onClick={() => setTab(t.key)}
               data-testid={`admin-tab-${t.key}`}
-              className={`px-4 py-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${tab === t.key ? "border-[#D4A017] text-black" : "border-transparent text-black/50 hover:text-black"}`}
+              className={`px-3 sm:px-4 py-3 text-xs sm:text-sm font-semibold flex items-center gap-1.5 sm:gap-2 border-b-2 transition-colors whitespace-nowrap shrink-0 ${tab === t.key ? "border-[#D4A017] text-black" : "border-transparent text-black/50 hover:text-black"}`}
             >
               <t.icon size={16} /> {t.label}
             </button>
@@ -95,14 +95,14 @@ function StatsCards() {
     { label: "Open Complaints", value: stats.open_complaints, icon: MessageCircleWarning, color: "text-red-600" },
   ];
   return (
-    <div className="mt-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3" data-testid="admin-stats">
+    <div className="mt-5 md:mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2 sm:gap-3" data-testid="admin-stats">
       {cards.map((c) => (
-        <div key={c.label} className="bg-white rounded-lg border border-black/5 p-4">
-          <div className="flex items-center justify-between">
-            <c.icon size={16} className={c.color} />
-            <p className="text-[10px] uppercase tracking-widest text-black/40 font-bold">{c.label}</p>
+        <div key={c.label} className="bg-white rounded-lg border border-black/5 p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-1">
+            <c.icon size={14} className={`${c.color} shrink-0`} />
+            <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-black/40 font-bold truncate">{c.label}</p>
           </div>
-          <p className="mt-3 font-heading text-2xl font-bold">{c.value}</p>
+          <p className="mt-2 md:mt-3 font-heading text-xl sm:text-2xl font-bold">{c.value}</p>
         </div>
       ))}
     </div>

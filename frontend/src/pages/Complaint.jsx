@@ -58,8 +58,8 @@ export default function ComplaintPage() {
   return (
     <div className="min-h-screen bg-[#FDFDFB]" data-testid="complaint-page">
       <Navbar />
-      <div className="max-w-5xl mx-auto px-6 md:px-10 py-10 md:py-14 grid lg:grid-cols-2 gap-8">
-        <div className="rounded-3xl bg-white border border-black/5 p-8">
+      <div className="max-w-5xl mx-auto px-5 sm:px-6 md:px-10 py-8 md:py-14 grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+        <div className="rounded-3xl bg-white border border-black/5 p-6 sm:p-8">
           <div className="w-12 h-12 rounded-2xl bg-[#FDF6E3] flex items-center justify-center">
             <MessageCircleWarning size={22} className="text-[#D4A017]" />
           </div>

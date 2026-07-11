@@ -5,9 +5,9 @@ export default function Footer() {
   return (
     <footer className="mt-24 bg-[#111111] text-white/80 relative overflow-hidden" data-testid="main-footer">
       <div className="absolute inset-0 grain-overlay opacity-40 pointer-events-none" />
-      <div className="max-w-7xl mx-auto px-6 md:px-10 py-16 relative">
-        <div className="grid md:grid-cols-4 gap-10">
-          <div className="md:col-span-2">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 md:px-10 py-14 md:py-16 relative">
+        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8 md:gap-10">
+          <div className="sm:col-span-2 md:col-span-2">
             <Logo size="lg" />
             <p className="mt-5 max-w-md text-white/60 leading-relaxed">
               Clengo is your neighbourhood laundry partner — premium wash, iron and dry-cleaning at your doorstep across Delhi NCR.
@@ -40,7 +40,7 @@ export default function Footer() {
             </ul>
           </div>
         </div>
-        <div className="mt-12 pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/40">
+        <div className="mt-10 md:mt-12 pt-6 border-t border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-4 text-[10px] sm:text-xs text-white/40">
           <p>© {new Date().getFullYear()} Clengo Laundry Pvt. Ltd. All rights reserved.</p>
           <p className="tracking-[0.3em] uppercase">Freshness delivered at doorstep</p>
         </div>
