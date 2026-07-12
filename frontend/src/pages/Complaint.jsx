@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import api from "@/lib/api";
-import { useAuth, loginWithGoogle } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { MessageCircleWarning, Send, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 

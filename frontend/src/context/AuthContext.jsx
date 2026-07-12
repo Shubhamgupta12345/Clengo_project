@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { useGoogleLogin } from "@react-oauth/google";
 import api from "@/lib/api";
 
 const AuthContext = createContext(null);
@@ -19,14 +20,21 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    // CRITICAL: If returning from OAuth callback, skip the /me check.
-    // AuthCallback will exchange the session_id and establish the session first.
-    if (window.location.hash?.includes("session_id=")) {
-      setLoading(false);
-      return;
-    }
     checkAuth();
   }, [checkAuth]);
+
+  const login = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const { data } = await api.post("/auth/session", {
+          access_token: tokenResponse.access_token,
+        });
+        setUser(data.user);
+      } catch (e) {
+        console.error("Login failed", e);
+      }
+    },
+  });
 
   const logout = async () => {
     try {
@@ -39,16 +47,10 @@ export function AuthProvider({ children }) {
   const refreshUser = checkAuth;
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, setUser, loading, logout, refreshUser, loginWithGoogle: login }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
 export const useAuth = () => useContext(AuthContext);
-
-// REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-export const loginWithGoogle = () => {
-  const redirectUrl = window.location.origin + "/order";
-  window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
-};

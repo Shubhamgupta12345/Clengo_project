@@ -17,6 +17,8 @@ from pathlib import Path
 from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone, timedelta
+from google.oauth2 import id_token as google_id_token
+from google.auth.transport import requests as google_requests
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -30,9 +32,10 @@ api_router = APIRouter(prefix="/api")
 
 # ============ Constants ============
 ADMIN_EMAILS = {"admin@clengo.in", "shubham2710gupta@gmail.com"}
-EMERGENT_AUTH_URL = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
+# EMERGENT_AUTH_URL = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
 # Clengo business WhatsApp number (E.164, digits only, incl. country code)
 CLENGO_WHATSAPP = "916307074843"
+GOOGLE_CLIENT_ID = os.environ['GOOGLE_CLIENT_ID']
 
 # ============ Utils ============
 def now_utc():
@@ -50,6 +53,8 @@ def gen_complaint_id() -> str:
     return f"CMP-{uuid.uuid4().hex[:8].upper()}"
 
 # ============ Models ============
+class GoogleAuthInput(BaseModel):
+    credential: str  # the ID token JWT from GoogleLogin
 class User(BaseModel):
     user_id: str
     email: str
@@ -226,21 +231,35 @@ async def require_admin(user: User = Depends(get_current_user)) -> User:
 # ============ Auth Endpoints ============
 @api_router.post("/auth/session")
 async def create_session(request: Request, response: Response):
-    """Exchange session_id from Emergent OAuth for a session_token cookie."""
+    """Verify a Google access_token and create our own session."""
     body = await request.json()
-    session_id = body.get("session_id")
-    if not session_id:
-        raise HTTPException(status_code=400, detail="session_id required")
+    access_token = body.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=400, detail="access_token required")
 
     async with httpx.AsyncClient(timeout=15) as hc:
-        r = await hc.get(EMERGENT_AUTH_URL, headers={"X-Session-ID": session_id})
-    if r.status_code != 200:
-        raise HTTPException(status_code=401, detail="Invalid session_id")
-    data = r.json()
+        # Confirm the token was issued for OUR client (security check)
+        tokeninfo = await hc.get(
+            "https://oauth2.googleapis.com/tokeninfo",
+            params={"access_token": access_token},
+        )
+        if tokeninfo.status_code != 200:
+            raise HTTPException(status_code=401, detail="Invalid access_token")
+        if tokeninfo.json().get("aud") != GOOGLE_CLIENT_ID:
+            raise HTTPException(status_code=401, detail="Token was not issued for this app")
+
+        # Fetch the actual profile info
+        userinfo = await hc.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+    if userinfo.status_code != 200:
+        raise HTTPException(status_code=401, detail="Could not fetch user info")
+
+    data = userinfo.json()
     email = data["email"]
-    name = data["name"]
+    name = data.get("name", email.split("@")[0])
     picture = data.get("picture")
-    session_token = data["session_token"]
 
     # Block check
     if email not in ADMIN_EMAILS:
@@ -252,7 +271,6 @@ async def create_session(request: Request, response: Response):
     existing = await db.users.find_one({"email": email}, {"_id": 0})
     if existing:
         user_id = existing["user_id"]
-        # Ensure admin role syncs
         role = "admin" if email in ADMIN_EMAILS else existing.get("role", "user")
         await db.users.update_one(
             {"user_id": user_id},
@@ -271,7 +289,8 @@ async def create_session(request: Request, response: Response):
         }
         await db.users.insert_one(new_user)
 
-    # Store session
+    # Create our own session token (was previously issued by Emergent)
+    session_token = gen_id("sess_")
     expires_at = now_utc() + timedelta(days=7)
     await db.user_sessions.update_one(
         {"session_token": session_token},
@@ -284,14 +303,13 @@ async def create_session(request: Request, response: Response):
         upsert=True,
     )
 
-    # Set httpOnly cookie
     response.set_cookie(
         key="session_token",
         value=session_token,
         max_age=7 * 24 * 60 * 60,
         httponly=True,
-        secure=True,
-        samesite="none",
+        secure=False,      # True in production over HTTPS
+        samesite="lax",    # "none" requires secure=True
         path="/",
     )
 

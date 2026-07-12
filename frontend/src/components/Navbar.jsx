@@ -1,11 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth, loginWithGoogle } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
+
 import Logo from "@/components/Logo";
 import { User, ShoppingBag, LogOut, LayoutDashboard, MessageCircleWarning, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, logout, loginWithGoogle } = useAuth();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 

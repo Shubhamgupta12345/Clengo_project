@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import api from "@/lib/api";
-import { useAuth, loginWithGoogle } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { ShoppingBag, ArrowRight, Package, Copy, Check, XCircle, Star, Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { useClengoWhatsApp, waLink, orderConfirmationText } from "@/lib/whatsapp";

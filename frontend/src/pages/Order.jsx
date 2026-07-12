@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PincodeChecker from "@/components/PincodeChecker";
 import api from "@/lib/api";
-import { useAuth, loginWithGoogle } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { Minus, Plus, ShoppingBag, MapPin, Calendar, Clock, Phone, ArrowRight, CheckCircle2, Sparkles, Droplets, Wind, ChevronRight, Loader2, Tag } from "lucide-react";
 import { useClengoWhatsApp, waLink, orderConfirmationText } from "@/lib/whatsapp";

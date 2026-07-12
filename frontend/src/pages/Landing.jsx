@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import PincodeChecker from "@/components/PincodeChecker";
 import Logo from "@/components/Logo";
 import { Sparkles, Shirt, Wind, Droplets, Truck, Clock, Shield, Star, ArrowRight, CheckCircle2, Tag, Info, MapPin } from "lucide-react";
-import { useAuth, loginWithGoogle } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { useSettings, useOffers, usePincodes } from "@/lib/hooks";
 
 const services = [

@@ -224,14 +224,14 @@ You're now logged in as admin locally. Visit http://localhost:3000/admin.
 
 ### `backend/.env.example`
 ```
-MONGO_URL=mongodb://localhost:27017
+MONGO_URL=mongodb+srv://shubham2710gupta_db_user:Clengo@123@cluster0.34pn5ke.mongodb.net/?appName=Cluster0 
 DB_NAME=clengo_local
 CORS_ORIGINS=http://localhost:3000
-```
+```yarn start
 
 ### `frontend/.env.example`
 ```
-REACT_APP_BACKEND_URL=http://localhost:8001
+REACT_APP_BACKEND_URL=http://localhost:8000
 WDS_SOCKET_PORT=0
 ```
 
