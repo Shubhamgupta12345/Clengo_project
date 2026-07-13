@@ -41,7 +41,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-10 md:mt-12 pt-6 border-t border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-4 text-[10px] sm:text-xs text-white/40">
-          <p>© {new Date().getFullYear()} {settings.company_name || "Clengo Laundry Pvt. Ltd."}. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} {settings.company_name || "Clengo Laundry"}. All rights reserved.</p>
           <p className="tracking-[0.3em] uppercase">Freshness delivered at doorstep</p>
         </div>
       </div>

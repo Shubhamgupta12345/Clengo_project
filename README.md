@@ -272,4 +272,4 @@ pytest tests/ -v
 ---
 
 ## License
-Proprietary — © Clengo Laundry Pvt. Ltd.
+Proprietary — © Clengo Laundry

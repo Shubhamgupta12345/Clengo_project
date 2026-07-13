@@ -21,7 +21,7 @@ const STATUS_META = {
 const TIMELINE = ["pending", "picked_up", "in_process", "out_for_delivery", "completed"];
 
 export default function MyOrders() {
-  const { user, loading } = useAuth();
+  const { user, loading, loginWithGoogle } = useAuth();
   const [orders, setOrders] = useState([]);
   const [fetching, setFetching] = useState(true);
   const navigate = useNavigate();
@@ -248,6 +248,71 @@ function OrderCard({ order, onCopy, copied, onCancel, onFeedback }) {
           onSubmit={(rating, comment) => { onFeedback(order.order_id, rating, comment); setFeedbackOpen(false); }}
         />
       )}
+    </div>
+  );
+}
+
+function FeedbackModal({ order, onClose, onSubmit }) {
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (rating < 1) {
+      toast.error("Please select a star rating");
+      return;
+    }
+    setSubmitting(true);
+    await onSubmit(rating, comment.trim());
+    setSubmitting(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose} data-testid="feedback-modal">
+      <div className="bg-white rounded-2xl max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-5 border-b border-black/10">
+          <p className="font-heading font-bold">Rate this order</p>
+          <button onClick={onClose} className="p-1.5 hover:bg-black/5 rounded-full" data-testid="close-feedback-modal-btn"><XCircle size={16} /></button>
+        </div>
+        <div className="p-5 space-y-4">
+          <p className="text-xs text-black/50">Order <span className="font-mono font-bold">{order.order_id}</span></p>
+          <div className="flex items-center justify-center gap-1" data-testid="feedback-stars">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onMouseEnter={() => setHoverRating(n)}
+                onMouseLeave={() => setHoverRating(0)}
+                onClick={() => setRating(n)}
+                data-testid={`feedback-star-${n}`}
+                className="p-1"
+              >
+                <Star size={28} className="text-[#D4A017]" fill={n <= (hoverRating || rating) ? "#D4A017" : "none"} />
+              </button>
+            ))}
+          </div>
+          <div>
+            <label className="text-[10px] uppercase tracking-widest font-bold text-black/50">Comments (optional)</label>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              rows={3}
+              placeholder="Tell us how the wash, ironing or delivery went..."
+              className="w-full mt-1 rounded-md border border-black/10 px-3 py-2 text-sm outline-none focus:border-[#D4A017]"
+              data-testid="feedback-comment-input"
+            />
+          </div>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || rating < 1}
+            className="w-full py-2.5 bg-[#111] text-white rounded-md text-sm font-bold hover:bg-[#D4A017] hover:text-black disabled:opacity-40 inline-flex items-center justify-center gap-2"
+            data-testid="submit-feedback-btn"
+          >
+            {submitting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} Submit feedback
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

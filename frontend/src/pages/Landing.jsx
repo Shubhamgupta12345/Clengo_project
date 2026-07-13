@@ -300,7 +300,7 @@ export default function Landing() {
             <p className="text-[10px] sm:text-xs tracking-[0.24em] uppercase font-bold">About Clengo</p>
           </div>
           <h2 className="mt-4 font-heading text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight leading-tight max-w-2xl">
-            {settings.company_name || "Clengo Laundry Pvt. Ltd."}
+            {settings.company_name || "Clengo Laundry"}
           </h2>
           <p className="mt-5 md:mt-6 text-sm sm:text-base text-black/70 leading-relaxed whitespace-pre-line">
             {settings.company_about || "Loading..."}

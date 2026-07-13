@@ -2,7 +2,7 @@
 Clengo - Laundry Service Application
 Backend: FastAPI + MongoDB with Emergent-managed Google Auth
 """
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, Response, Query
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, Response, Query, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -11,6 +11,10 @@ import os
 import io
 import logging
 import uuid
+import asyncio
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 import httpx
 import pandas as pd
 from pathlib import Path
@@ -37,6 +41,16 @@ ADMIN_EMAILS = {"admin@clengo.in", "shubham2710gupta@gmail.com"}
 CLENGO_WHATSAPP = "916307074843"
 GOOGLE_CLIENT_ID = os.environ['GOOGLE_CLIENT_ID']
 
+# ============ Email (SMTP) config ============
+SMTP_HOST = os.environ.get("SMTP_HOST", "")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+SMTP_USER = os.environ.get("SMTP_USER", "")
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+FROM_EMAIL = os.environ.get("FROM_EMAIL", SMTP_USER)
+FROM_NAME = os.environ.get("FROM_NAME", "Clengo Laundry")
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://www.clengo.in")
+EMAIL_ENABLED = bool(SMTP_HOST and SMTP_USER and SMTP_PASSWORD)
+
 # ============ Utils ============
 def now_utc():
     return datetime.now(timezone.utc)
@@ -51,6 +65,152 @@ def gen_order_id() -> str:
 
 def gen_complaint_id() -> str:
     return f"CMP-{uuid.uuid4().hex[:8].upper()}"
+
+# ============ Email notifications ============
+def _send_email_sync(to_email: str, subject: str, html_body: str):
+    if not EMAIL_ENABLED:
+        logging.info(f"[email disabled - set SMTP_HOST/SMTP_USER/SMTP_PASSWORD] Would send to {to_email}: {subject}")
+        return
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = f"{FROM_NAME} <{FROM_EMAIL}>"
+    msg["To"] = to_email
+    msg.attach(MIMEText(html_body, "html"))
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(FROM_EMAIL, [to_email], msg.as_string())
+    except Exception as e:
+        logging.error(f"Failed to send email to {to_email} ({subject}): {e}")
+
+async def send_email(to_email: str, subject: str, html_body: str):
+    """Fire-and-forget email send; never raises so it can't break the request it's attached to."""
+    try:
+        await asyncio.to_thread(_send_email_sync, to_email, subject, html_body)
+    except Exception as e:
+        logging.error(f"send_email failed for {to_email}: {e}")
+
+def _email_shell(preheader: str, body_html: str) -> str:
+    """Shared branded wrapper for all outgoing emails."""
+    return f"""
+    <div style="background:#F4F5F7;padding:32px 16px;font-family:Arial,Helvetica,sans-serif;color:#111;">
+      <div style="display:none;max-height:0;overflow:hidden;">{preheader}</div>
+      <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #eee;">
+        <div style="background:#111;padding:20px 28px;">
+          <span style="color:#D4A017;font-weight:bold;font-size:20px;letter-spacing:0.04em;">CLENGO</span>
+          <span style="color:#fff;font-size:12px;margin-left:8px;">Freshness Delivered at Doorstep</span>
+        </div>
+        <div style="padding:28px;font-size:14px;line-height:1.6;">
+          {body_html}
+        </div>
+        <div style="padding:16px 28px;background:#F7F6F2;font-size:11px;color:#888;">
+          Clengo Laundry Pvt. Ltd. · Need help? Reply to this email or WhatsApp us.
+        </div>
+      </div>
+    </div>
+    """
+
+def _order_items_table(items) -> str:
+    rows = "".join(
+        f"<tr><td style='padding:6px 0;'>{i['item_name']} <span style='color:#D4A017;text-transform:uppercase;font-size:10px;'>{i['service']}</span></td>"
+        f"<td style='padding:6px 0;text-align:center;'>x{i['quantity']}</td>"
+        f"<td style='padding:6px 0;text-align:right;'>₹{i['subtotal']:.0f}</td></tr>"
+        for i in items
+    )
+    return f"<table style='width:100%;border-collapse:collapse;margin-top:8px;'>{rows}</table>"
+
+async def notify_order_confirmed(order: dict):
+    body = f"""
+    <p>Hi {order['user_name']},</p>
+    <p>Your order has been placed successfully. Here are the details:</p>
+    <p style="margin:16px 0;"><b>Order ID:</b> <span style="font-family:monospace;">{order['order_id']}</span></p>
+    {_order_items_table(order['items'])}
+    <p style="margin-top:12px;">
+      Subtotal: ₹{order['subtotal']:.0f}<br/>
+      {'Discount: -₹' + format(order['discount'], '.0f') + '<br/>' if order.get('discount') else ''}
+      <b>Total (COD): ₹{order['total_amount']:.0f}</b>
+    </p>
+    <p><b>Pickup:</b> {order['pickup_date']}, {order['pickup_slot']}<br/>
+       <b>Address:</b> {order['pickup_address']} ({order['pickup_pincode']})</p>
+    <p>We'll notify you as your order moves through pickup, processing and delivery.</p>
+    """
+    await send_email(order["user_email"], f"Order confirmed – {order['order_id']}", _email_shell("Your Clengo order is confirmed", body))
+
+STATUS_MESSAGES = {
+    "picked_up": "Your laundry has been picked up by our partner and is on its way to the facility.",
+    "in_process": "Your laundry is now being washed / cleaned by our team.",
+    "out_for_delivery": "Your laundry is fresh and out for delivery to your address.",
+    "completed": "Your order has been delivered. Thank you for choosing Clengo! We'd love your feedback.",
+    "cancelled": "Your order has been cancelled.",
+}
+STATUS_LABELS_EMAIL = {
+    "pending": "Pending", "picked_up": "Picked up", "in_process": "In process",
+    "out_for_delivery": "Out for delivery", "completed": "Completed", "cancelled": "Cancelled",
+}
+
+async def notify_status_update(order: dict, status: str):
+    message = STATUS_MESSAGES.get(status, f"Your order status is now {STATUS_LABELS_EMAIL.get(status, status)}.")
+    body = f"""
+    <p>Hi {order['user_name']},</p>
+    <p>{message}</p>
+    <p style="margin:16px 0;"><b>Order ID:</b> <span style="font-family:monospace;">{order['order_id']}</span><br/>
+    <b>Status:</b> {STATUS_LABELS_EMAIL.get(status, status)}</p>
+    """
+    await send_email(order["user_email"], f"Order {STATUS_LABELS_EMAIL.get(status, status)} – {order['order_id']}", _email_shell(message, body))
+
+async def notify_order_cancelled(order: dict, cancelled_by: str, reason: str):
+    who = "you" if cancelled_by == "user" else "Clengo support"
+    body = f"""
+    <p>Hi {order['user_name']},</p>
+    <p>Your order <span style="font-family:monospace;">{order['order_id']}</span> has been cancelled by {who}.</p>
+    {'<p><b>Reason:</b> ' + reason + '</p>' if reason else ''}
+    <p>If this was unexpected or you have questions, just reply to this email or reach us on WhatsApp.</p>
+    """
+    await send_email(order["user_email"], f"Order cancelled – {order['order_id']}", _email_shell("Your Clengo order was cancelled", body))
+
+async def notify_order_rescheduled(order: dict, pickup_date: str, pickup_slot: str):
+    body = f"""
+    <p>Hi {order['user_name']},</p>
+    <p>Your pickup for order <span style="font-family:monospace;">{order['order_id']}</span> has been rescheduled.</p>
+    <p style="margin:16px 0;"><b>New pickup date:</b> {pickup_date}<br/><b>New pickup slot:</b> {pickup_slot}</p>
+    <p>Sorry for any inconvenience — we'll be there at the new time.</p>
+    """
+    await send_email(order["user_email"], f"Pickup rescheduled – {order['order_id']}", _email_shell("Your pickup time has changed", body))
+
+async def notify_admins_new_complaint(complaint: dict):
+    body = f"""
+    <p>A new complaint has been filed.</p>
+    <p><b>Complaint ID:</b> {complaint['complaint_id']}<br/>
+    <b>Order ID:</b> {complaint['order_id']}<br/>
+    <b>From:</b> {complaint['user_email']}<br/>
+    <b>Subject:</b> {complaint['subject']}</p>
+    <p style="background:#F7F6F2;padding:12px;border-radius:8px;">{complaint['message']}</p>
+    <p>Please review and respond from the admin dashboard.</p>
+    """
+    for admin_email in ADMIN_EMAILS:
+        await send_email(admin_email, f"New complaint – {complaint['complaint_id']}", _email_shell("A customer needs support", body))
+
+async def notify_complaint_resolved(complaint: dict):
+    body = f"""
+    <p>Hi,</p>
+    <p>We've responded to your complaint regarding order <span style="font-family:monospace;">{complaint['order_id']}</span>.</p>
+    <p><b>Your message:</b> {complaint['message']}</p>
+    <p style="background:#F7F6F2;padding:12px;border-radius:8px;"><b>Our response:</b> {complaint.get('admin_response') or ''}</p>
+    <p>Thanks for your patience — reach out again if anything's still unresolved.</p>
+    """
+    await send_email(complaint["user_email"], f"We've responded to your complaint – {complaint['complaint_id']}", _email_shell("Update on your complaint", body))
+
+async def notify_admins_low_feedback(order: dict, rating: int, comment: str):
+    body = f"""
+    <p>A customer left a low rating and may need follow-up.</p>
+    <p><b>Order ID:</b> {order['order_id']}<br/>
+    <b>Customer:</b> {order['user_name']} ({order['user_email']})<br/>
+    <b>Rating:</b> {rating} / 5</p>
+    {'<p style="background:#F7F6F2;padding:12px;border-radius:8px;">' + comment + '</p>' if comment else ''}
+    """
+    for admin_email in ADMIN_EMAILS:
+        await send_email(admin_email, f"Low rating ({rating}★) on order {order['order_id']}", _email_shell("Customer feedback needs attention", body))
 
 # ============ Models ============
 class GoogleAuthInput(BaseModel):
@@ -372,7 +532,7 @@ def _best_offer(subtotal: float, offers: list):
     return max(applicable, key=lambda o: o.get("discount", 0))
 
 @api_router.post("/orders")
-async def create_order(order_data: OrderCreate, user: User = Depends(get_current_user)):
+async def create_order(order_data: OrderCreate, background_tasks: BackgroundTasks, user: User = Depends(get_current_user)):
     # Validate pincode
     pin_doc = await db.pincodes.find_one({"pincode": order_data.pickup_pincode, "active": True})
     if not pin_doc:
@@ -420,6 +580,7 @@ async def create_order(order_data: OrderCreate, user: User = Depends(get_current
     doc["created_at"] = doc["created_at"].isoformat()
     doc["updated_at"] = doc["updated_at"].isoformat()
     await db.orders.insert_one(doc)
+    background_tasks.add_task(notify_order_confirmed, doc)
     return {k: v for k, v in doc.items() if k != "_id"}
 
 @api_router.get("/orders/me")
@@ -438,7 +599,7 @@ async def get_order(order_id: str, user: User = Depends(get_current_user)):
 
 # ============ User Order Actions ============
 @api_router.post("/orders/{order_id}/cancel")
-async def user_cancel_order(order_id: str, payload: OrderCancelInput, user: User = Depends(get_current_user)):
+async def user_cancel_order(order_id: str, payload: OrderCancelInput, background_tasks: BackgroundTasks, user: User = Depends(get_current_user)):
     doc = await db.orders.find_one({"order_id": order_id})
     if not doc:
         raise HTTPException(status_code=404, detail="Order not found")
@@ -469,10 +630,12 @@ async def user_cancel_order(order_id: str, payload: OrderCancelInput, user: User
             "updated_at": now_utc().isoformat(),
         }},
     )
-    return await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    updated = await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    background_tasks.add_task(notify_order_cancelled, updated, user.role, payload.reason or "")
+    return updated
 
 @api_router.post("/orders/{order_id}/feedback")
-async def submit_feedback(order_id: str, payload: FeedbackInput, user: User = Depends(get_current_user)):
+async def submit_feedback(order_id: str, payload: FeedbackInput, background_tasks: BackgroundTasks, user: User = Depends(get_current_user)):
     if payload.rating < 1 or payload.rating > 5:
         raise HTTPException(status_code=400, detail="Rating must be between 1 and 5")
     doc = await db.orders.find_one({"order_id": order_id})
@@ -490,7 +653,10 @@ async def submit_feedback(order_id: str, payload: FeedbackInput, user: User = De
             "feedback_at": now_utc().isoformat(),
         }},
     )
-    return await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    updated = await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    if payload.rating <= 2:
+        background_tasks.add_task(notify_admins_low_feedback, updated, payload.rating, payload.comment or "")
+    return updated
 
 # ============ Public offers & settings ============
 @api_router.get("/offers")
@@ -504,7 +670,7 @@ async def public_settings():
 
 # ============ Complaints ============
 @api_router.post("/complaints")
-async def create_complaint(payload: ComplaintCreate, user: User = Depends(get_current_user)):
+async def create_complaint(payload: ComplaintCreate, background_tasks: BackgroundTasks, user: User = Depends(get_current_user)):
     order = await db.orders.find_one({"order_id": payload.order_id})
     if not order:
         raise HTTPException(status_code=404, detail="Order not found for the given Order ID")
@@ -522,6 +688,7 @@ async def create_complaint(payload: ComplaintCreate, user: User = Depends(get_cu
     doc = complaint.model_dump()
     doc["created_at"] = doc["created_at"].isoformat()
     await db.complaints.insert_one(doc)
+    background_tasks.add_task(notify_admins_new_complaint, doc)
     return {k: v for k, v in doc.items() if k != "_id"}
 
 @api_router.get("/complaints/me")
@@ -542,6 +709,14 @@ async def admin_stats(user: User = Depends(require_admin)):
     pipeline = [{"$group": {"_id": None, "sum": {"$sum": "$total_amount"}}}]
     agg = await db.orders.aggregate(pipeline).to_list(1)
     revenue = agg[0]["sum"] if agg else 0
+    # Feedback / ratings summary
+    feedback_count = await db.orders.count_documents({"feedback_rating": {"$ne": None}})
+    rating_pipeline = [
+        {"$match": {"feedback_rating": {"$ne": None}}},
+        {"$group": {"_id": None, "avg": {"$avg": "$feedback_rating"}}},
+    ]
+    rating_agg = await db.orders.aggregate(rating_pipeline).to_list(1)
+    avg_rating = round(rating_agg[0]["avg"], 2) if rating_agg else None
     return {
         "total_orders": total_orders,
         "pending": pending,
@@ -550,6 +725,8 @@ async def admin_stats(user: User = Depends(require_admin)):
         "open_complaints": open_complaints,
         "total_users": total_users,
         "revenue": revenue,
+        "feedback_count": feedback_count,
+        "avg_rating": avg_rating,
     }
 
 @api_router.get("/admin/orders")
@@ -587,7 +764,7 @@ async def admin_list_orders(
     return docs
 
 @api_router.patch("/admin/orders/{order_id}/status")
-async def admin_update_status(order_id: str, payload: OrderStatusUpdate, user: User = Depends(require_admin)):
+async def admin_update_status(order_id: str, payload: OrderStatusUpdate, background_tasks: BackgroundTasks, user: User = Depends(require_admin)):
     valid = {"pending", "picked_up", "in_process", "out_for_delivery", "completed", "cancelled"}
     if payload.status not in valid:
         raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of {valid}")
@@ -599,6 +776,7 @@ async def admin_update_status(order_id: str, payload: OrderStatusUpdate, user: U
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Order not found")
     doc = await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    background_tasks.add_task(notify_status_update, doc, payload.status)
     return doc
 
 @api_router.get("/admin/orders/export")
@@ -676,12 +854,35 @@ async def admin_list_complaints(user: User = Depends(require_admin), status: Opt
     return docs
 
 @api_router.patch("/admin/complaints/{complaint_id}")
-async def admin_update_complaint(complaint_id: str, payload: ComplaintUpdate, user: User = Depends(require_admin)):
+async def admin_update_complaint(complaint_id: str, payload: ComplaintUpdate, background_tasks: BackgroundTasks, user: User = Depends(require_admin)):
     updates = {k: v for k, v in payload.model_dump().items() if v is not None}
     if updates:
         await db.complaints.update_one({"complaint_id": complaint_id}, {"$set": updates})
     doc = await db.complaints.find_one({"complaint_id": complaint_id}, {"_id": 0})
+    if updates.get("status") == "resolved" and updates.get("admin_response"):
+        background_tasks.add_task(notify_complaint_resolved, doc)
     return doc
+
+# ---- Feedback ----
+@api_router.get("/admin/feedback")
+async def admin_list_feedback(
+    user: User = Depends(require_admin),
+    min_rating: Optional[int] = None,
+    max_rating: Optional[int] = None,
+):
+    rating_q: Dict[str, Any] = {"$ne": None}
+    if min_rating is not None or max_rating is not None:
+        rating_q = {"$ne": None}
+        if min_rating is not None:
+            rating_q["$gte"] = min_rating
+        if max_rating is not None:
+            rating_q["$lte"] = max_rating
+    docs = await db.orders.find(
+        {"feedback_rating": rating_q},
+        {"_id": 0, "order_id": 1, "user_name": 1, "user_email": 1, "feedback_rating": 1,
+         "feedback_comment": 1, "feedback_at": 1, "total_amount": 1, "created_at": 1},
+    ).sort("feedback_at", -1).to_list(2000)
+    return docs
 
 @api_router.get("/admin/pincodes")
 async def admin_list_pincodes(user: User = Depends(require_admin)):
@@ -786,7 +987,7 @@ async def admin_remove_blocklist(email: str, user: User = Depends(require_admin)
 
 # ---- Order cancel & reschedule (admin) ----
 @api_router.post("/admin/orders/{order_id}/cancel")
-async def admin_cancel_order(order_id: str, payload: OrderCancelInput, user: User = Depends(require_admin)):
+async def admin_cancel_order(order_id: str, payload: OrderCancelInput, background_tasks: BackgroundTasks, user: User = Depends(require_admin)):
     doc = await db.orders.find_one({"order_id": order_id})
     if not doc:
         raise HTTPException(status_code=404, detail="Order not found")
@@ -799,10 +1000,12 @@ async def admin_cancel_order(order_id: str, payload: OrderCancelInput, user: Use
             "updated_at": now_utc().isoformat(),
         }},
     )
-    return await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    updated = await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    background_tasks.add_task(notify_order_cancelled, updated, "admin", payload.reason or "")
+    return updated
 
 @api_router.post("/admin/orders/{order_id}/reschedule")
-async def admin_reschedule_order(order_id: str, payload: OrderRescheduleInput, user: User = Depends(require_admin)):
+async def admin_reschedule_order(order_id: str, payload: OrderRescheduleInput, background_tasks: BackgroundTasks, user: User = Depends(require_admin)):
     doc = await db.orders.find_one({"order_id": order_id})
     if not doc:
         raise HTTPException(status_code=404, detail="Order not found")
@@ -814,7 +1017,9 @@ async def admin_reschedule_order(order_id: str, payload: OrderRescheduleInput, u
             "updated_at": now_utc().isoformat(),
         }},
     )
-    return await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    updated = await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    background_tasks.add_task(notify_order_rescheduled, updated, payload.pickup_date, payload.pickup_slot)
+    return updated
 
 # ============ Seed Data ============
 @app.on_event("startup")
