@@ -463,15 +463,25 @@ async def create_session(request: Request, response: Response):
         upsert=True,
     )
 
+    # response.set_cookie(
+    #     key="session_token",
+    #     value=session_token,
+    #     max_age=7 * 24 * 60 * 60,
+    #     httponly=True,
+    #     secure=False,      # True in production over HTTPS
+    #     samesite="lax",    # "none" requires secure=True
+    #     path="/",
+    # )
+    
     response.set_cookie(
-        key="session_token",
-        value=session_token,
-        max_age=7 * 24 * 60 * 60,
-        httponly=True,
-        secure=False,      # True in production over HTTPS
-        samesite="lax",    # "none" requires secure=True
-        path="/",
-    )
+    key="session_token",
+    value=session_token,
+    max_age=7 * 24 * 60 * 60,
+    httponly=True,
+    secure=True,      # change from False
+    samesite="none",  # change from "lax"
+    path="/",
+)
 
     user_doc = await db.users.find_one({"user_id": user_id}, {"_id": 0})
     return {"user": user_doc, "session_token": session_token}
