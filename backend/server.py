@@ -473,16 +473,25 @@ async def create_session(request: Request, response: Response):
     #     path="/",
     # )
     
-    response.set_cookie(
-    key="session_token",
-    value=session_token,
-    max_age=7 * 24 * 60 * 60,
-    httponly=True,
-    secure=True,      # change from False
-    samesite="none",  # change from "lax"
-    path="/",
-)
+#     response.set_cookie(
+#     key="session_token",
+#     value=session_token,
+#     max_age=7 * 24 * 60 * 60,
+#     httponly=True,
+#     secure=True,      # change from False
+#     samesite="none",  # change from "lax"
+#     path="/",
+# )
 
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,
+        secure=True,        # required — mobile browsers reject SameSite=None without this
+        samesite="none",    # required for cross-site (different domain) cookies
+        path="/",
+    )
+    
     user_doc = await db.users.find_one({"user_id": user_id}, {"_id": 0})
     return {"user": user_doc, "session_token": session_token}
 
@@ -1137,10 +1146,18 @@ async def get_config():
 # Include the router in the main app
 app.include_router(api_router)
 
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_credentials=True,
+#     allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=["https://clengo-project-frontend.vercel.app"],  # exact origin, not "*"
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
     allow_methods=["*"],
     allow_headers=["*"],
 )
