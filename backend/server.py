@@ -35,7 +35,7 @@ app = FastAPI(title="Clengo API")
 api_router = APIRouter(prefix="/api")
 
 # ============ Constants ============
-ADMIN_EMAILS = {"admin@clengo.in", "shubham2710gupta@gmail.com"}
+ADMIN_EMAILS = {"admin@clengo.in", "shubham2710gupta@gmail.com","diksha3773@gmail.com","shubham.dcl@gmail.com","chakshandhir@gmail.com"}
 # EMERGENT_AUTH_URL = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
 # Clengo business WhatsApp number (E.164, digits only, incl. country code)
 CLENGO_WHATSAPP = "916307074843"
