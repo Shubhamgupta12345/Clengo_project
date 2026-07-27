@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /order
+Disallow: /my-orders
+Disallow: /complaint
+Disallow: /profile
+Disallow: /admin
+
+Sitemap: https://www.clengo.in/sitemap.xml
