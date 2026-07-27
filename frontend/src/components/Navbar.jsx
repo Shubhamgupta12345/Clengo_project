@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-
+import ConsentModal from "@/components/ConsentModal";   // ADD THIS
 import Logo from "@/components/Logo";
 import { User, ShoppingBag, LogOut, LayoutDashboard, MessageCircleWarning, Menu, X } from "lucide-react";
 import { useState } from "react";
@@ -8,6 +8,8 @@ import { useState } from "react";
 export default function Navbar() {
   const { user, logout, loginWithGoogle } = useAuth();
   const [open, setOpen] = useState(false);
+  const [consentOpen, setConsentOpen] = useState(false);   // ADD THIS
+
   const navigate = useNavigate();
 
   return (
@@ -62,7 +64,7 @@ export default function Navbar() {
             </div>
           ) : (
             <button
-              onClick={loginWithGoogle}
+              onClick={() => setConsentOpen(true)}  // OPEN THE CONSENT MODAL
               data-testid="nav-login-btn"
               className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 bg-[#111111] text-white rounded-full text-sm font-semibold hover:bg-[#D4A017] hover:text-black transition-colors duration-300 active:scale-95"
             >
@@ -110,7 +112,7 @@ export default function Navbar() {
               </button>
             ) : (
               <button
-                onClick={loginWithGoogle}
+                onClick={() => setConsentOpen(true)}  // OPEN THE CONSENT MODAL
                 className="py-3 bg-[#111] text-white rounded-full font-semibold"
                 data-testid="mobile-nav-login"
               >
@@ -120,6 +122,12 @@ export default function Navbar() {
           </div>
         </div>
       )}
+    
+<ConsentModal
+        open={consentOpen}
+        onOpenChange={setConsentOpen}
+        onAgree={loginWithGoogle}
+      />
     </header>
   );
 }
