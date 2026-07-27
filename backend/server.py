@@ -23,6 +23,9 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone, timedelta
 from google.oauth2 import id_token as google_id_token
 from google.auth.transport import requests as google_requests
+import smtplib
+import socket   # ADD THIS
+from email.mime.multipart import MIMEMultipart
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -76,6 +79,16 @@ def _send_email_sync(to_email: str, subject: str, html_body: str):
     msg["From"] = f"{FROM_NAME} <{FROM_EMAIL}>"
     msg["To"] = to_email
     msg.attach(MIMEText(html_body, "html"))
+
+    orig_getaddrinfo = socket.getaddrinfo
+
+    def _ipv4_only_getaddrinfo(*args, **kwargs):
+        return [
+            addr for addr in orig_getaddrinfo(*args, **kwargs)
+            if addr[0] == socket.AF_INET
+        ]
+
+    socket.getaddrinfo = _ipv4_only_getaddrinfo
     try:
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as server:
             server.starttls()
@@ -83,6 +96,8 @@ def _send_email_sync(to_email: str, subject: str, html_body: str):
             server.sendmail(FROM_EMAIL, [to_email], msg.as_string())
     except Exception as e:
         logging.error(f"Failed to send email to {to_email} ({subject}): {e}")
+    finally:
+        socket.getaddrinfo = orig_getaddrinfo
 
 async def send_email(to_email: str, subject: str, html_body: str):
     """Fire-and-forget email send; never raises so it can't break the request it's attached to."""
