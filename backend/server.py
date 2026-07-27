@@ -35,7 +35,7 @@ app = FastAPI(title="Clengo API")
 api_router = APIRouter(prefix="/api")
 
 # ============ Constants ============
-ADMIN_EMAILS = {"admin@clengo.in", "shubham2710gupta@gmail.com","diksha3773@gmail.com","shubham.dcl@gmail.com","chakshandhir@gmail.com"}
+ADMIN_EMAILS = { "shubham2710gupta@gmail.com","diksha3773@gmail.com","shubham.dcl@gmail.com","chakshandhir@gmail.com"}
 # EMERGENT_AUTH_URL = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
 # Clengo business WhatsApp number (E.164, digits only, incl. country code)
 CLENGO_WHATSAPP = "916307074843"
@@ -1156,7 +1156,7 @@ app.include_router(api_router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://clengo-project-frontend.vercel.app"],  # exact origin, not "*"
+    allow_origins=["https://clengo-project-frontend.vercel.app","https://www.clengo.in","https://clengo.in"],  # exact origin, not "*"
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
