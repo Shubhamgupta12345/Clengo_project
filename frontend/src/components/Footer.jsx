@@ -1,6 +1,13 @@
 import Logo from "@/components/Logo";
-import { Mail, MapPin } from "lucide-react";
+import { Mail, MapPin, Instagram, Twitter, Facebook, Youtube } from "lucide-react";
 import { useSettings } from "@/lib/hooks";
+
+const SOCIAL_LINKS = [
+  { key: "instagram", label: "Instagram", icon: Instagram, href: "https://instagram.com/clengo" },
+  { key: "twitter", label: "Twitter / X", icon: Twitter, href: "https://twitter.com/clengo" },
+  { key: "facebook", label: "Facebook", icon: Facebook, href: "https://facebook.com/clengo" },
+  { key: "youtube", label: "YouTube", icon: Youtube, href: "https://youtube.com/@clengo" },
+];
 
 export default function Footer() {
   const settings = useSettings();
@@ -19,6 +26,22 @@ export default function Footer() {
               <a href={`mailto:${email}`} data-testid="footer-email-link" className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-[#D4A017]/20 transition-colors text-sm">
                 <Mail size={14} /> {email}
               </a>
+            </div>
+            <div className="mt-5 flex items-center gap-2 sm:gap-3" data-testid="footer-social-links">
+              {SOCIAL_LINKS.map((s) => (
+                <a
+                  key={s.key}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={s.label}
+                  title={s.label}
+                  data-testid={`footer-social-${s.key}`}
+                  className="w-9 h-9 rounded-full bg-white/5 hover:bg-[#D4A017] hover:text-black flex items-center justify-center transition-colors"
+                >
+                  <s.icon size={16} />
+                </a>
+              ))}
             </div>
           </div>
           <div>

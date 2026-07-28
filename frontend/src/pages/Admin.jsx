@@ -312,12 +312,12 @@ function OrderDetailModal({ order, onClose, onUpdate, onCancel, onReschedule }) 
   return (
     <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose} data-testid="order-detail-modal">
       <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-6 border-b border-black/10">
+        <div className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-6 border-b border-black/10">
           <div>
             <p className="text-[10px] uppercase tracking-widest text-black/40 font-bold">Order</p>
-            <p className="font-mono text-lg font-bold">{order.order_id}</p>
+            <p className="font-mono text-base sm:text-lg font-bold break-all">{order.order_id}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {canModify && (
               <>
                 <button onClick={onReschedule} className="px-3 py-1.5 text-xs font-bold rounded-full border border-blue-200 text-blue-700 hover:bg-blue-600 hover:text-white transition-colors inline-flex items-center gap-1.5" data-testid="modal-reschedule-btn">
@@ -331,8 +331,8 @@ function OrderDetailModal({ order, onClose, onUpdate, onCancel, onReschedule }) 
             <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full" data-testid="close-modal-btn"><X size={18} /></button>
           </div>
         </div>
-        <div className="p-6 space-y-5 text-sm">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="p-4 sm:p-6 space-y-5 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Detail label="Customer" value={`${order.user_name} · ${order.user_email}`} />
             <Detail label="Phone" value={order.contact_phone} />
             <Detail label="Pickup date/slot" value={`${order.pickup_date} · ${order.pickup_slot}`} />
@@ -545,26 +545,28 @@ function PincodesTab() {
   return (
     <div className="grid md:grid-cols-3 gap-4">
       <div className="md:col-span-2 bg-white rounded-lg border border-black/5 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-[#F7F6F2] text-[10px] uppercase tracking-widest text-black/50">
-            <tr><th className="text-left px-4 py-3">Pincode</th><th className="text-left px-4 py-3">City</th><th className="text-left px-4 py-3">Area</th><th className="text-left px-4 py-3">Active</th><th className="text-right px-4 py-3"></th></tr>
-          </thead>
-          <tbody className="divide-y divide-black/5">
-            {items.map((p) => (
-              <tr key={p.pincode} data-testid={`pincode-row-${p.pincode}`}>
-                <td className="px-4 py-3 font-mono font-bold">{p.pincode}</td>
-                <td className="px-4 py-3">{p.city}</td>
-                <td className="px-4 py-3">{p.area}</td>
-                <td className="px-4 py-3">
-                  <button onClick={() => toggle(p)} className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${p.active ? "bg-green-100 text-green-700 border-green-200" : "bg-black/5 text-black/50 border-black/10"}`}>{p.active ? "Active" : "Inactive"}</button>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <button onClick={() => remove(p.pincode)} className="p-2 hover:text-red-600" data-testid={`delete-pincode-${p.pincode}`}><Trash2 size={14} /></button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-[#F7F6F2] text-[10px] uppercase tracking-widest text-black/50">
+              <tr><th className="text-left px-4 py-3">Pincode</th><th className="text-left px-4 py-3">City</th><th className="text-left px-4 py-3">Area</th><th className="text-left px-4 py-3">Active</th><th className="text-right px-4 py-3"></th></tr>
+            </thead>
+            <tbody className="divide-y divide-black/5">
+              {items.map((p) => (
+                <tr key={p.pincode} data-testid={`pincode-row-${p.pincode}`}>
+                  <td className="px-4 py-3 font-mono font-bold">{p.pincode}</td>
+                  <td className="px-4 py-3">{p.city}</td>
+                  <td className="px-4 py-3">{p.area}</td>
+                  <td className="px-4 py-3">
+                    <button onClick={() => toggle(p)} className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${p.active ? "bg-green-100 text-green-700 border-green-200" : "bg-black/5 text-black/50 border-black/10"}`}>{p.active ? "Active" : "Inactive"}</button>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button onClick={() => remove(p.pincode)} className="p-2 hover:text-red-600" data-testid={`delete-pincode-${p.pincode}`}><Trash2 size={14} /></button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
       <form onSubmit={add} className="bg-white rounded-lg border border-black/5 p-5 h-fit space-y-3" data-testid="add-pincode-form">
         <h3 className="font-heading font-bold">Add / Update pincode</h3>
@@ -634,39 +636,41 @@ function CatalogTab() {
   return (
     <div className="grid md:grid-cols-3 gap-4" data-testid="catalog-tab">
       <div className="md:col-span-2 bg-white rounded-lg border border-black/5 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-[#F7F6F2] text-[10px] uppercase tracking-widest text-black/50">
-            <tr>
-              <th className="text-left px-4 py-3">Item</th>
-              <th className="text-left px-4 py-3">Category</th>
-              <th className="text-right px-4 py-3">Wash</th>
-              <th className="text-right px-4 py-3">Iron</th>
-              <th className="text-right px-4 py-3">Dry clean</th>
-              <th className="text-right px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-black/5">
-            {loading ? (
-              <tr><td colSpan={6} className="text-center py-10 text-black/40"><Loader2 className="animate-spin inline mr-2" size={16} /> Loading...</td></tr>
-            ) : items.length === 0 ? (
-              <tr><td colSpan={6} className="text-center py-10 text-black/40">No services yet</td></tr>
-            ) : items.map((it) => (
-              <tr key={it.item_id} data-testid={`catalog-row-${it.item_id}`}>
-                <td className="px-4 py-3 font-medium">{it.name}</td>
-                <td className="px-4 py-3 capitalize text-xs text-black/60">{it.category}</td>
-                <td className="px-4 py-3 text-right font-mono">₹{it.prices.wash}</td>
-                <td className="px-4 py-3 text-right font-mono">₹{it.prices.iron}</td>
-                <td className="px-4 py-3 text-right font-mono">₹{it.prices.dryclean}</td>
-                <td className="px-4 py-3 text-right">
-                  <div className="inline-flex items-center gap-1">
-                    <button onClick={() => edit(it)} className="p-2 hover:text-[#B88A14]" data-testid={`edit-catalog-${it.item_id}`}><Pencil size={14} /></button>
-                    <button onClick={() => remove(it.item_id)} className="p-2 hover:text-red-600" data-testid={`delete-catalog-${it.item_id}`}><Trash2 size={14} /></button>
-                  </div>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-[#F7F6F2] text-[10px] uppercase tracking-widest text-black/50">
+              <tr>
+                <th className="text-left px-4 py-3">Item</th>
+                <th className="text-left px-4 py-3">Category</th>
+                <th className="text-right px-4 py-3">Wash</th>
+                <th className="text-right px-4 py-3">Iron</th>
+                <th className="text-right px-4 py-3">Dry clean</th>
+                <th className="text-right px-4 py-3"></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-black/5">
+              {loading ? (
+                <tr><td colSpan={6} className="text-center py-10 text-black/40"><Loader2 className="animate-spin inline mr-2" size={16} /> Loading...</td></tr>
+              ) : items.length === 0 ? (
+                <tr><td colSpan={6} className="text-center py-10 text-black/40">No services yet</td></tr>
+              ) : items.map((it) => (
+                <tr key={it.item_id} data-testid={`catalog-row-${it.item_id}`}>
+                  <td className="px-4 py-3 font-medium">{it.name}</td>
+                  <td className="px-4 py-3 capitalize text-xs text-black/60">{it.category}</td>
+                  <td className="px-4 py-3 text-right font-mono">₹{it.prices.wash}</td>
+                  <td className="px-4 py-3 text-right font-mono">₹{it.prices.iron}</td>
+                  <td className="px-4 py-3 text-right font-mono">₹{it.prices.dryclean}</td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="inline-flex items-center gap-1">
+                      <button onClick={() => edit(it)} className="p-2 hover:text-[#B88A14]" data-testid={`edit-catalog-${it.item_id}`}><Pencil size={14} /></button>
+                      <button onClick={() => remove(it.item_id)} className="p-2 hover:text-red-600" data-testid={`delete-catalog-${it.item_id}`}><Trash2 size={14} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
       <form onSubmit={save} className="bg-white rounded-lg border border-black/5 p-5 h-fit space-y-3" data-testid="catalog-form">
         <div className="flex items-center justify-between">
@@ -760,39 +764,41 @@ function OffersTab() {
   return (
     <div className="grid md:grid-cols-3 gap-4" data-testid="offers-tab">
       <div className="md:col-span-2 bg-white rounded-lg border border-black/5 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-[#F7F6F2] text-[10px] uppercase tracking-widest text-black/50">
-            <tr>
-              <th className="text-left px-4 py-3">Offer</th>
-              <th className="text-right px-4 py-3">Min. order</th>
-              <th className="text-right px-4 py-3">Discount</th>
-              <th className="text-left px-4 py-3">Active</th>
-              <th className="text-right px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-black/5">
-            {loading ? (
-              <tr><td colSpan={5} className="text-center py-10 text-black/40"><Loader2 className="animate-spin inline mr-2" size={16} /> Loading...</td></tr>
-            ) : offers.length === 0 ? (
-              <tr><td colSpan={5} className="text-center py-10 text-black/40">No offers yet</td></tr>
-            ) : offers.map((o) => (
-              <tr key={o.offer_id} data-testid={`offer-row-${o.offer_id}`}>
-                <td className="px-4 py-3">{o.label}</td>
-                <td className="px-4 py-3 text-right font-mono">₹{o.threshold}</td>
-                <td className="px-4 py-3 text-right font-mono">₹{o.discount}</td>
-                <td className="px-4 py-3">
-                  <button onClick={() => toggleActive(o)} className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${o.active ? "bg-green-100 text-green-700 border-green-200" : "bg-black/5 text-black/50 border-black/10"}`}>{o.active ? "Active" : "Inactive"}</button>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="inline-flex items-center gap-1">
-                    <button onClick={() => edit(o)} className="p-2 hover:text-[#B88A14]" data-testid={`edit-offer-${o.offer_id}`}><Pencil size={14} /></button>
-                    <button onClick={() => remove(o.offer_id)} className="p-2 hover:text-red-600" data-testid={`delete-offer-${o.offer_id}`}><Trash2 size={14} /></button>
-                  </div>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-[#F7F6F2] text-[10px] uppercase tracking-widest text-black/50">
+              <tr>
+                <th className="text-left px-4 py-3">Offer</th>
+                <th className="text-right px-4 py-3">Min. order</th>
+                <th className="text-right px-4 py-3">Discount</th>
+                <th className="text-left px-4 py-3">Active</th>
+                <th className="text-right px-4 py-3"></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-black/5">
+              {loading ? (
+                <tr><td colSpan={5} className="text-center py-10 text-black/40"><Loader2 className="animate-spin inline mr-2" size={16} /> Loading...</td></tr>
+              ) : offers.length === 0 ? (
+                <tr><td colSpan={5} className="text-center py-10 text-black/40">No offers yet</td></tr>
+              ) : offers.map((o) => (
+                <tr key={o.offer_id} data-testid={`offer-row-${o.offer_id}`}>
+                  <td className="px-4 py-3">{o.label}</td>
+                  <td className="px-4 py-3 text-right font-mono">₹{o.threshold}</td>
+                  <td className="px-4 py-3 text-right font-mono">₹{o.discount}</td>
+                  <td className="px-4 py-3">
+                    <button onClick={() => toggleActive(o)} className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${o.active ? "bg-green-100 text-green-700 border-green-200" : "bg-black/5 text-black/50 border-black/10"}`}>{o.active ? "Active" : "Inactive"}</button>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="inline-flex items-center gap-1">
+                      <button onClick={() => edit(o)} className="p-2 hover:text-[#B88A14]" data-testid={`edit-offer-${o.offer_id}`}><Pencil size={14} /></button>
+                      <button onClick={() => remove(o.offer_id)} className="p-2 hover:text-red-600" data-testid={`delete-offer-${o.offer_id}`}><Trash2 size={14} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
       <form onSubmit={save} className="bg-white rounded-lg border border-black/5 p-5 h-fit space-y-3" data-testid="offer-form">
         <div className="flex items-center justify-between">
@@ -911,26 +917,28 @@ function BlocklistTab() {
   return (
     <div className="grid md:grid-cols-3 gap-4" data-testid="blocklist-tab">
       <div className="md:col-span-2 bg-white rounded-lg border border-black/5 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-[#F7F6F2] text-[10px] uppercase tracking-widest text-black/50">
-            <tr><th className="text-left px-4 py-3">Email</th><th className="text-left px-4 py-3">Reason</th><th className="text-right px-4 py-3"></th></tr>
-          </thead>
-          <tbody className="divide-y divide-black/5">
-            {loading ? (
-              <tr><td colSpan={3} className="text-center py-10 text-black/40"><Loader2 className="animate-spin inline mr-2" size={16} /> Loading...</td></tr>
-            ) : items.length === 0 ? (
-              <tr><td colSpan={3} className="text-center py-10 text-black/40">No blocked emails</td></tr>
-            ) : items.map((b) => (
-              <tr key={b.email} data-testid={`blocklist-row-${b.email}`}>
-                <td className="px-4 py-3 font-mono text-xs">{b.email}</td>
-                <td className="px-4 py-3 text-black/60">{b.reason || "—"}</td>
-                <td className="px-4 py-3 text-right">
-                  <button onClick={() => remove(b.email)} className="p-2 hover:text-red-600" data-testid={`unblock-${b.email}`}><Trash2 size={14} /></button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-[#F7F6F2] text-[10px] uppercase tracking-widest text-black/50">
+              <tr><th className="text-left px-4 py-3">Email</th><th className="text-left px-4 py-3">Reason</th><th className="text-right px-4 py-3"></th></tr>
+            </thead>
+            <tbody className="divide-y divide-black/5">
+              {loading ? (
+                <tr><td colSpan={3} className="text-center py-10 text-black/40"><Loader2 className="animate-spin inline mr-2" size={16} /> Loading...</td></tr>
+              ) : items.length === 0 ? (
+                <tr><td colSpan={3} className="text-center py-10 text-black/40">No blocked emails</td></tr>
+              ) : items.map((b) => (
+                <tr key={b.email} data-testid={`blocklist-row-${b.email}`}>
+                  <td className="px-4 py-3 font-mono text-xs">{b.email}</td>
+                  <td className="px-4 py-3 text-black/60">{b.reason || "—"}</td>
+                  <td className="px-4 py-3 text-right">
+                    <button onClick={() => remove(b.email)} className="p-2 hover:text-red-600" data-testid={`unblock-${b.email}`}><Trash2 size={14} /></button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
       <form onSubmit={add} className="bg-white rounded-lg border border-black/5 p-5 h-fit space-y-3" data-testid="add-blocklist-form">
         <h3 className="font-heading font-bold">Block an email</h3>

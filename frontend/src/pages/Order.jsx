@@ -196,8 +196,8 @@ export default function Order() {
         {/* STEP 1: pincode */}
         {step === 1 && (
           <div className="mt-10 max-w-2xl" data-testid="step-1-pincode">
-            <div className="rounded-3xl bg-white border border-black/5 p-8 shadow-sm">
-              <h2 className="font-heading text-2xl font-semibold">Where should we pick up?</h2>
+            <div className="rounded-3xl bg-white border border-black/5 p-5 sm:p-6 md:p-8 shadow-sm">
+              <h2 className="font-heading text-xl sm:text-2xl font-semibold">Where should we pick up?</h2>
               <p className="mt-2 text-sm text-black/60">Enter your pincode to check if we service your area.</p>
               <div className="mt-6">
                 <PincodeChecker
@@ -221,26 +221,26 @@ export default function Order() {
           <div className="mt-10 grid lg:grid-cols-3 gap-6" data-testid="step-2-items">
             <div className="lg:col-span-2 space-y-6">
               {/* Service selector */}
-              <div className="rounded-3xl bg-white border border-black/5 p-6">
+              <div className="rounded-3xl bg-white border border-black/5 p-4 sm:p-6">
                 <p className="text-xs uppercase tracking-[0.24em] font-bold text-black/50">Choose service</p>
-                <div className="mt-4 grid grid-cols-3 gap-3">
+                <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
                   {SERVICES.map((s) => (
                     <button
                       key={s.key}
                       onClick={() => setService(s.key)}
                       data-testid={`service-select-${s.key}`}
-                      className={`p-4 rounded-2xl border-2 text-left transition-colors duration-300 ${service === s.key ? "border-[#D4A017] bg-[#FDF6E3]" : "border-black/5 bg-[#F7F6F2] hover:border-[#D4A017]/40"}`}
+                      className={`p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border-2 text-left transition-colors duration-300 ${service === s.key ? "border-[#D4A017] bg-[#FDF6E3]" : "border-black/5 bg-[#F7F6F2] hover:border-[#D4A017]/40"}`}
                     >
-                      <s.icon size={22} className={service === s.key ? "text-[#D4A017]" : "text-black/40"} />
-                      <p className="mt-3 font-semibold">{s.label}</p>
-                      <p className="text-[10px] uppercase tracking-widest text-black/40 mt-0.5">{s.tag}</p>
+                      <s.icon size={18} className={`sm:w-[22px] sm:h-[22px] ${service === s.key ? "text-[#D4A017]" : "text-black/40"}`} />
+                      <p className="mt-2 sm:mt-3 text-xs sm:text-base font-semibold leading-tight">{s.label}</p>
+                      <p className="hidden sm:block text-[10px] uppercase tracking-widest text-black/40 mt-0.5">{s.tag}</p>
                     </button>
                   ))}
                 </div>
               </div>
 
               {/* Catalog */}
-              <div className="rounded-3xl bg-white border border-black/5 p-6">
+              <div className="rounded-3xl bg-white border border-black/5 p-4 sm:p-6">
                 <div className="flex items-center justify-between">
                   <p className="text-xs uppercase tracking-[0.24em] font-bold text-black/50">Select items</p>
                   <p className="text-xs text-black/40">Tap + to add</p>
@@ -251,23 +251,23 @@ export default function Order() {
                     const price = item.prices[service];
                     if (price == null || price === 0) return null;
                     return (
-                      <div key={item.item_id} className="py-4 flex items-center justify-between" data-testid={`catalog-item-${item.item_id}`}>
-                        <div>
-                          <p className="font-medium">{item.name}</p>
+                      <div key={item.item_id} className="py-4 flex items-center justify-between gap-3" data-testid={`catalog-item-${item.item_id}`}>
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{item.name}</p>
                           <p className="text-xs text-black/50 mt-0.5">₹{price} per piece · <span className="uppercase tracking-wider">{item.category}</span></p>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                           <button
                             onClick={() => setQty(item.item_id, q - 1)}
                             disabled={q === 0}
                             data-testid={`qty-minus-${item.item_id}`}
-                            className="w-9 h-9 rounded-full border border-black/10 flex items-center justify-center hover:border-[#D4A017] hover:text-[#D4A017] disabled:opacity-30 transition-colors"
+                            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-black/10 flex items-center justify-center hover:border-[#D4A017] hover:text-[#D4A017] disabled:opacity-30 transition-colors"
                           ><Minus size={14} /></button>
-                          <span className="w-8 text-center font-mono font-bold" data-testid={`qty-${item.item_id}`}>{q}</span>
+                          <span className="w-6 sm:w-8 text-center font-mono font-bold" data-testid={`qty-${item.item_id}`}>{q}</span>
                           <button
                             onClick={() => setQty(item.item_id, q + 1)}
                             data-testid={`qty-plus-${item.item_id}`}
-                            className="w-9 h-9 rounded-full bg-[#D4A017] text-black flex items-center justify-center hover:bg-[#B88A14] active:scale-95 transition-transform"
+                            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#D4A017] text-black flex items-center justify-center hover:bg-[#B88A14] active:scale-95 transition-transform"
                           ><Plus size={14} /></button>
                         </div>
                       </div>
