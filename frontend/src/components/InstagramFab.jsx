@@ -1,6 +1,6 @@
 import { Instagram } from "lucide-react";
 
-const INSTAGRAM_URL = "https://instagram.com/clengo";
+const INSTAGRAM_URL = "https://instagram.com/clengo.in";
 
 export default function InstagramFab() {
   return (
