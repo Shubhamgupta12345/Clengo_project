@@ -199,6 +199,7 @@ function OrdersTab() {
           <select value={filters.service} onChange={(e) => setFilters({ ...filters, service: e.target.value })} className="rounded-md border border-black/10 px-3 py-2 text-sm bg-white" data-testid="filter-service">
             <option value="">All services</option>
             <option value="wash">Wash</option>
+            <option value="wash_iron">Wash & Iron</option>
             <option value="iron">Iron</option>
             <option value="dryclean">Dry Clean</option>
           </select>
@@ -584,7 +585,7 @@ function PincodesTab() {
 // ============ Catalog (services & pricing) ============
 const CATEGORIES = ["daily", "ethnic", "household", "premium"];
 const ICONS = ["shirt", "footprints", "sparkles", "briefcase", "bed"];
-const EMPTY_ITEM = { item_id: "", name: "", category: "daily", icon: "shirt", prices: { wash: "", iron: "", dryclean: "" } };
+const EMPTY_ITEM = { item_id: "", name: "", category: "daily", icon: "shirt", prices: { wash: "", wash_iron: "", iron: "", dryclean: "" } };
 
 function CatalogTab() {
   const [items, setItems] = useState([]);
@@ -599,7 +600,7 @@ function CatalogTab() {
   };
   useEffect(() => { load(); }, []);
 
-  const edit = (item) => setForm({ ...item, prices: { ...item.prices } });
+  const edit = (item) => setForm({ ...item, prices: { wash: "", wash_iron: "", iron: "", dryclean: "", ...item.prices } });
   const resetForm = () => setForm(EMPTY_ITEM);
 
   const save = async (e) => {
@@ -612,6 +613,7 @@ function CatalogTab() {
       icon: form.icon,
       prices: {
         wash: Number(form.prices.wash) || 0,
+        wash_iron: Number(form.prices.wash_iron) || 0,
         iron: Number(form.prices.iron) || 0,
         dryclean: Number(form.prices.dryclean) || 0,
       },
@@ -643,6 +645,7 @@ function CatalogTab() {
                 <th className="text-left px-4 py-3">Item</th>
                 <th className="text-left px-4 py-3">Category</th>
                 <th className="text-right px-4 py-3">Wash</th>
+                <th className="text-right px-4 py-3">Wash+Iron</th>
                 <th className="text-right px-4 py-3">Iron</th>
                 <th className="text-right px-4 py-3">Dry clean</th>
                 <th className="text-right px-4 py-3"></th>
@@ -650,14 +653,15 @@ function CatalogTab() {
             </thead>
             <tbody className="divide-y divide-black/5">
               {loading ? (
-                <tr><td colSpan={6} className="text-center py-10 text-black/40"><Loader2 className="animate-spin inline mr-2" size={16} /> Loading...</td></tr>
+                <tr><td colSpan={7} className="text-center py-10 text-black/40"><Loader2 className="animate-spin inline mr-2" size={16} /> Loading...</td></tr>
               ) : items.length === 0 ? (
-                <tr><td colSpan={6} className="text-center py-10 text-black/40">No services yet</td></tr>
+                <tr><td colSpan={7} className="text-center py-10 text-black/40">No services yet</td></tr>
               ) : items.map((it) => (
                 <tr key={it.item_id} data-testid={`catalog-row-${it.item_id}`}>
                   <td className="px-4 py-3 font-medium">{it.name}</td>
                   <td className="px-4 py-3 capitalize text-xs text-black/60">{it.category}</td>
                   <td className="px-4 py-3 text-right font-mono">₹{it.prices.wash}</td>
+                  <td className="px-4 py-3 text-right font-mono">₹{it.prices.wash_iron ?? 0}</td>
                   <td className="px-4 py-3 text-right font-mono">₹{it.prices.iron}</td>
                   <td className="px-4 py-3 text-right font-mono">₹{it.prices.dryclean}</td>
                   <td className="px-4 py-3 text-right">
@@ -686,10 +690,14 @@ function CatalogTab() {
             {ICONS.map((i) => <option key={i} value={i}>{i}</option>)}
           </select>
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <div>
             <label className="text-[10px] uppercase tracking-widest font-bold text-black/50">Wash ₹</label>
             <input type="number" min="0" value={form.prices.wash} onChange={(e) => setForm({ ...form, prices: { ...form.prices, wash: e.target.value } })} className="w-full mt-1 rounded-md border border-black/10 px-2 py-2 text-sm" data-testid="catalog-price-wash" />
+          </div>
+          <div>
+            <label className="text-[10px] uppercase tracking-widest font-bold text-black/50">Wash &amp; Iron ₹</label>
+            <input type="number" min="0" value={form.prices.wash_iron} onChange={(e) => setForm({ ...form, prices: { ...form.prices, wash_iron: e.target.value } })} className="w-full mt-1 rounded-md border border-black/10 px-2 py-2 text-sm" data-testid="catalog-price-wash-iron" />
           </div>
           <div>
             <label className="text-[10px] uppercase tracking-widest font-bold text-black/50">Iron ₹</label>

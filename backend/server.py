@@ -257,13 +257,13 @@ class CatalogItem(BaseModel):
     item_id: str
     name: str
     category: str  # 'daily', 'ethnic', 'household', 'premium'
-    prices: Dict[str, float]  # {'wash': 20, 'iron': 10, 'dryclean': 100}
+    prices: Dict[str, float]  # {'wash': 20, 'wash_iron': 27, 'iron': 10, 'dryclean': 100}
     icon: str = "shirt"
 
 class OrderLine(BaseModel):
     item_id: str
     item_name: str
-    service: str  # 'wash' | 'iron' | 'dryclean'
+    service: str  # 'wash' | 'wash_iron' | 'iron' | 'dryclean'
     quantity: int
     unit_price: float
     subtotal: float
@@ -1081,24 +1081,24 @@ async def seed_startup():
     if await db.catalog.count_documents({}) == 0:
         catalog = [
             # Daily wear
-            {"item_id": "itm_shirt", "name": "Shirt", "category": "daily", "icon": "shirt", "prices": {"wash": 25, "iron": 12, "dryclean": 90}},
-            {"item_id": "itm_tshirt", "name": "T-Shirt", "category": "daily", "icon": "shirt", "prices": {"wash": 20, "iron": 10, "dryclean": 80}},
-            {"item_id": "itm_trouser", "name": "Trouser / Pant", "category": "daily", "icon": "footprints", "prices": {"wash": 30, "iron": 15, "dryclean": 120}},
-            {"item_id": "itm_jeans", "name": "Jeans", "category": "daily", "icon": "footprints", "prices": {"wash": 35, "iron": 18, "dryclean": 140}},
-            {"item_id": "itm_kurta", "name": "Kurta", "category": "ethnic", "icon": "shirt", "prices": {"wash": 30, "iron": 15, "dryclean": 130}},
-            {"item_id": "itm_pyjama", "name": "Pyjama", "category": "ethnic", "icon": "footprints", "prices": {"wash": 25, "iron": 12, "dryclean": 100}},
+            {"item_id": "itm_shirt", "name": "Shirt", "category": "daily", "icon": "shirt", "prices": {"wash": 25, "wash_iron": 33, "iron": 12, "dryclean": 90}},
+            {"item_id": "itm_tshirt", "name": "T-Shirt", "category": "daily", "icon": "shirt", "prices": {"wash": 20, "wash_iron": 27, "iron": 10, "dryclean": 80}},
+            {"item_id": "itm_trouser", "name": "Trouser / Pant", "category": "daily", "icon": "footprints", "prices": {"wash": 30, "wash_iron": 40, "iron": 15, "dryclean": 120}},
+            {"item_id": "itm_jeans", "name": "Jeans", "category": "daily", "icon": "footprints", "prices": {"wash": 35, "wash_iron": 48, "iron": 18, "dryclean": 140}},
+            {"item_id": "itm_kurta", "name": "Kurta", "category": "ethnic", "icon": "shirt", "prices": {"wash": 30, "wash_iron": 40, "iron": 15, "dryclean": 130}},
+            {"item_id": "itm_pyjama", "name": "Pyjama", "category": "ethnic", "icon": "footprints", "prices": {"wash": 25, "wash_iron": 33, "iron": 12, "dryclean": 100}},
             # Ethnic / Premium
-            {"item_id": "itm_saree", "name": "Saree", "category": "ethnic", "icon": "sparkles", "prices": {"wash": 90, "iron": 40, "dryclean": 220}},
-            {"item_id": "itm_lehenga", "name": "Lehenga", "category": "premium", "icon": "sparkles", "prices": {"wash": 250, "iron": 90, "dryclean": 600}},
-            {"item_id": "itm_suit", "name": "Suit (2 pcs)", "category": "premium", "icon": "briefcase", "prices": {"wash": 200, "iron": 80, "dryclean": 450}},
-            {"item_id": "itm_blazer", "name": "Blazer / Coat", "category": "premium", "icon": "briefcase", "prices": {"wash": 150, "iron": 60, "dryclean": 300}},
-            {"item_id": "itm_sherwani", "name": "Sherwani", "category": "premium", "icon": "sparkles", "prices": {"wash": 250, "iron": 90, "dryclean": 550}},
+            {"item_id": "itm_saree", "name": "Saree", "category": "ethnic", "icon": "sparkles", "prices": {"wash": 90, "wash_iron": 115, "iron": 40, "dryclean": 220}},
+            {"item_id": "itm_lehenga", "name": "Lehenga", "category": "premium", "icon": "sparkles", "prices": {"wash": 250, "wash_iron": 300, "iron": 90, "dryclean": 600}},
+            {"item_id": "itm_suit", "name": "Suit (2 pcs)", "category": "premium", "icon": "briefcase", "prices": {"wash": 200, "wash_iron": 250, "iron": 80, "dryclean": 450}},
+            {"item_id": "itm_blazer", "name": "Blazer / Coat", "category": "premium", "icon": "briefcase", "prices": {"wash": 150, "wash_iron": 190, "iron": 60, "dryclean": 300}},
+            {"item_id": "itm_sherwani", "name": "Sherwani", "category": "premium", "icon": "sparkles", "prices": {"wash": 250, "wash_iron": 300, "iron": 90, "dryclean": 550}},
             # Household
-            {"item_id": "itm_bedsheet_s", "name": "Bedsheet (Single)", "category": "household", "icon": "bed", "prices": {"wash": 40, "iron": 25, "dryclean": 150}},
-            {"item_id": "itm_bedsheet_d", "name": "Bedsheet (Double)", "category": "household", "icon": "bed", "prices": {"wash": 70, "iron": 40, "dryclean": 220}},
-            {"item_id": "itm_curtain", "name": "Curtain (per piece)", "category": "household", "icon": "bed", "prices": {"wash": 60, "iron": 30, "dryclean": 180}},
-            {"item_id": "itm_towel", "name": "Towel", "category": "household", "icon": "bed", "prices": {"wash": 20, "iron": 10, "dryclean": 70}},
-            {"item_id": "itm_blanket", "name": "Blanket", "category": "household", "icon": "bed", "prices": {"wash": 120, "iron": 0, "dryclean": 250}},
+            {"item_id": "itm_bedsheet_s", "name": "Bedsheet (Single)", "category": "household", "icon": "bed", "prices": {"wash": 40, "wash_iron": 58, "iron": 25, "dryclean": 150}},
+            {"item_id": "itm_bedsheet_d", "name": "Bedsheet (Double)", "category": "household", "icon": "bed", "prices": {"wash": 70, "wash_iron": 100, "iron": 40, "dryclean": 220}},
+            {"item_id": "itm_curtain", "name": "Curtain (per piece)", "category": "household", "icon": "bed", "prices": {"wash": 60, "wash_iron": 80, "iron": 30, "dryclean": 180}},
+            {"item_id": "itm_towel", "name": "Towel", "category": "household", "icon": "bed", "prices": {"wash": 20, "wash_iron": 27, "iron": 10, "dryclean": 70}},
+            {"item_id": "itm_blanket", "name": "Blanket", "category": "household", "icon": "bed", "prices": {"wash": 120, "wash_iron": 0, "iron": 0, "dryclean": 250}},
         ]
         await db.catalog.insert_many(catalog)
         logging.info(f"Seeded {len(catalog)} catalog items")

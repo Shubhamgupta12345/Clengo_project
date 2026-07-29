@@ -18,6 +18,14 @@ const services = [
     img: "https://images.unsplash.com/photo-1567857171318-944337972f90?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NjZ8MHwxfHNlYXJjaHwxfHx3YXNoaW5nJTIwbWFjaGluZSUyMHdhdGVyJTIwYnViYmxlcyUyMGNsZWFufGVufDB8fHx8MTc4MzE2MTA4Mnww&ixlib=rb-4.1.0&q=85",
   },
   {
+    key: "wash_iron",
+    title: "Wash & Iron",
+    price: "from ₹27/pc",
+    desc: "Best of both — freshly washed and finished with a crisp steam press, ready to wear.",
+    icon: Shirt,
+    img: "https://images.unsplash.com/photo-1567857171318-944337972f90?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NjZ8MHwxfHNlYXJjaHwxfHx3YXNoaW5nJTIwbWFjaGluZSUyMHdhdGVyJTIwYnViYmxlcyUyMGNsZWFufGVufDB8fHx8MTc4MzE2MTA4Mnww&ixlib=rb-4.1.0&q=85",
+  },
+  {
     key: "iron",
     title: "Steam Iron",
     price: "from ₹10/pc",
@@ -158,7 +166,7 @@ export default function Landing() {
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-5 md:gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
           {services.map((s, i) => (
             <div
               key={s.key}

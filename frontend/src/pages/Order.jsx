@@ -6,13 +6,14 @@ import PincodeChecker from "@/components/PincodeChecker";
 import api from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { Minus, Plus, ShoppingBag, MapPin, Calendar, Clock, Phone, ArrowRight, CheckCircle2, Sparkles, Droplets, Wind, ChevronRight, Loader2, Tag } from "lucide-react";
+import { Minus, Plus, ShoppingBag, MapPin, Calendar, Clock, Phone, ArrowRight, CheckCircle2, Sparkles, Droplets, Wind, Shirt, ChevronRight, Loader2, Tag } from "lucide-react";
 import { useClengoWhatsApp, waLink, orderConfirmationText } from "@/lib/whatsapp";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { useOffers, useSettings, bestOfferFor } from "@/lib/hooks";
 
 const SERVICES = [
   { key: "wash", label: "Wash & Fold", icon: Droplets, tag: "Everyday" },
+  { key: "wash_iron", label: "Wash & Iron", icon: Shirt, tag: "Combo" },
   { key: "iron", label: "Steam Iron", icon: Wind, tag: "Crisp" },
   { key: "dryclean", label: "Dry Clean", icon: Sparkles, tag: "Premium" },
 ];
@@ -223,7 +224,7 @@ export default function Order() {
               {/* Service selector */}
               <div className="rounded-3xl bg-white border border-black/5 p-4 sm:p-6">
                 <p className="text-xs uppercase tracking-[0.24em] font-bold text-black/50">Choose service</p>
-                <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                   {SERVICES.map((s) => (
                     <button
                       key={s.key}
