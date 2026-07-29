@@ -158,7 +158,7 @@ export default function Landing() {
           <div>
             <p className="text-[10px] sm:text-xs tracking-[0.24em] uppercase font-bold text-[#D4A017]">What we do</p>
             <h2 className="mt-3 font-heading text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight max-w-2xl">
-              Three services. Zero compromises.
+              Four services. Zero compromises.
             </h2>
           </div>
           <p className="text-sm sm:text-base text-black/60 max-w-md">
