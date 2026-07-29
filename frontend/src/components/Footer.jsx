@@ -4,9 +4,9 @@ import { useSettings } from "@/lib/hooks";
 
 const SOCIAL_LINKS = [
   { key: "instagram", label: "Instagram", icon: Instagram, href: "https://instagram.com/clengo.in" },
-  { key: "twitter", label: "Twitter / X", icon: Twitter, href: "https://twitter.com/clengo" },
-  { key: "facebook", label: "Facebook", icon: Facebook, href: "https://facebook.com/clengo" },
-  { key: "youtube", label: "YouTube", icon: Youtube, href: "https://youtube.com/@clengo" },
+  { key: "twitter", label: "Twitter / X", icon: Twitter, href: "https://twitter.com/clengoIndia" },
+  { key: "facebook", label: "Facebook", icon: Facebook, href: "https://facebook.com/clengo.in" },
+  { key: "youtube", label: "YouTube", icon: Youtube, href: "https://youtube.com/@clengoIndia" },
 ];
 
 export default function Footer() {
