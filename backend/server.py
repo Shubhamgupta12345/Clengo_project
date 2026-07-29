@@ -100,9 +100,23 @@ def _send_email_sync(to_email: str, subject: str, html_body: str):
         socket.getaddrinfo = orig_getaddrinfo
 
 async def send_email(to_email: str, subject: str, html_body: str):
-    """Fire-and-forget email send; never raises so it can't break the request it's attached to."""
+    if not RESEND_API_KEY:
+        logging.info(f"[email disabled] Would send to {to_email}: {subject}")
+        return
     try:
-        await asyncio.to_thread(_send_email_sync, to_email, subject, html_body)
+        async with httpx.AsyncClient(timeout=15) as hc:
+            resp = await hc.post(
+                "https://api.resend.com/emails",
+                headers={"Authorization": f"Bearer {RESEND_API_KEY}"},
+                json={
+                    "from": f"{FROM_NAME} <{FROM_EMAIL}>",
+                    "to": [to_email],
+                    "subject": subject,
+                    "html": html_body,
+                },
+            )
+            if resp.status_code >= 400:
+                logging.error(f"Email send failed to {to_email}: {resp.status_code} {resp.text}")
     except Exception as e:
         logging.error(f"send_email failed for {to_email}: {e}")
 
